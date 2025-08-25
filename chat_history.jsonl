@@ -1,0 +1,7 @@
+{"event": "session_init", "session_id": "585e6de7-b05c-4882-ab16-1c03b5d82253"}
+{"event": "session_init", "session_id": "7138e8b4-8c9c-4f3e-b0b0-56c3c0de3e60"}
+{"event": "round_start", "session_id": "7138e8b4-8c9c-4f3e-b0b0-56c3c0de3e60", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 0}
+{"event": "user_message", "session_id": "7138e8b4-8c9c-4f3e-b0b0-56c3c0de3e60", "text": "ping"}
+{"event": "session_init", "session_id": "11bc8d51-1924-4861-99ff-e6ad16ffe517"}
+{"event": "round_start", "session_id": "11bc8d51-1924-4861-99ff-e6ad16ffe517", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 0}
+{"event": "user_message", "session_id": "11bc8d51-1924-4861-99ff-e6ad16ffe517", "text": "111"}
