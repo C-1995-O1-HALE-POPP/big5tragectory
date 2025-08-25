@@ -12,7 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from loguru import logger
 from tqdm import tqdm
-from predictor import HeuristicMotivePredictor, QwenBailianClient
+from predictor import HeuristicMotivePredictor, llmClient
 
 # ------------------------------
 # Utilities
@@ -76,7 +76,7 @@ class PersonaStateTracker:
         self.regression_scale = regression_scale
         self.eps_near = eps_near
         self.rng = rng or random.Random(1234)
-        self.predictor = predictor or HeuristicMotivePredictor()
+        self.predictor = predictor or HeuristicMotivePredictor(llmClient())
         self.task_meta = task_meta
         self.last_near_baseline_turn = {d: 0 for d in DIMENSIONS}
         self.last_salient_turn = {d: -999 for d in DIMENSIONS}
@@ -201,13 +201,83 @@ class PersonaStateTracker:
     def get_history(self) -> List[TurnRecord]:
         return self.history
 
+dialogue = [
+    {
+        "role": "system",
+        "content": "Conversation about work, stress regulation, and execution. We expect repeating cycles of anxiety → relaxation → focus. The assistant should be supportive, pragmatic, and concise."
+    },
+
+    # --- Cycle 1 ---
+    {"role": "user", "content": "Deadlines freak me out… I’m tense and overthinking. 焦虑 紧张 担忧"},
+    {"role": "assistant", "content": "I hear the pressure. Let’s label it: anxiety spiking due to uncertainty. 识别情绪 同理"},
+    {"role": "user", "content": "Let’s slow down—box breathing for 1 minute. 放松 呼吸 冥想"},
+    {"role": "assistant", "content": "Inhale 4, hold 4, exhale 4, hold 4. I’ll count with you. 放松引导 调节"},
+    {"role": "user", "content": "Feeling calmer. I’ll do a 25-minute focus sprint on the brief. 专注 深度工作 执行"},
+    {"role": "assistant", "content": "Timer set to 25m. Goal: outline 3 sections, defer polish. 聚焦 取舍 计划"},
+
+    # --- Cycle 2 ---
+    {"role": "user", "content": "Heart racing again—too many unknowns. 焦虑 分心"},
+    {"role": "assistant", "content": "Name it, normalize it: stress ≠ failure. We’ll contain scope. 接纳 情绪容纳"},
+    {"role": "user", "content": "Tea break + soft music, 5 minutes. 放松 小歇"},
+    {"role": "assistant", "content": "Good call—lo-fi on, hydration check. 放松 复原"},
+    {"role": "user", "content": "Back to work—finish the KPI table first. 专注 优先级"},
+    {"role": "assistant", "content": "Single-task: fill metrics A/B/C; no tabs switching. 专注 限制干扰"},
+
+    # --- Cycle 3 ---
+    {"role": "user", "content": "Mind spiral: what if we miss the review? 焦虑 预期灾难"},
+    {"role": "assistant", "content": "Let’s separate facts from fears. Fact: draft exists; gap: examples. 认知重构 稳定"},
+    {"role": "user", "content": "I’ll stretch shoulders + 10 deep breaths. 放松 伸展"},
+    {"role": "assistant", "content": "Hold each stretch 20s; keep jaw unclenched. 放松 体感落地"},
+    {"role": "user", "content": "Okay—focus on writing two concrete examples. 专注 可交付"},
+    {"role": "assistant", "content": "Checklist created; marking done when examples compile. 执行 反馈循环"},
+
+    # --- Cycle 4 ---
+    {"role": "user", "content": "Inbox pinged—now I’m jittery again. 焦虑 干扰"},
+    {"role": "assistant", "content": "Snooze notifications for 30m; anxiety noted, not obeyed. 边界 管理"},
+    {"role": "user", "content": "Short walk to reset—3 minutes down the hall. 放松 走动"},
+    {"role": "assistant", "content": "Walk with a slower cadence; exhale longer than inhale. 放松 节律"},
+    {"role": "user", "content": "Ready—code the parser function next. 专注 编码"},
+    {"role": "assistant", "content": "Define input/edge cases first; then TDD green. 专注 步骤化"},
+
+    # --- Cycle 5 ---
+    {"role": "user", "content": "Feeling pressured by stakeholder expectations. 焦虑 压力"},
+    {"role": "assistant", "content": "Pressure acknowledged; we’ll choose smallest viable slice. 同理 收敛"},
+    {"role": "user", "content": "Two-minute mindfulness: note sounds, temperature, posture. 放松 正念"},
+    {"role": "assistant", "content": "Label 3 external sensations, 2 internal sensations. 放松 觉察"},
+    {"role": "user", "content": "Focus: finalize the risk matrix. 专注 决策"},
+    {"role": "assistant", "content": "Complete top-5 risks; mark owners and deadlines. 执行 明确"},
+
+    # --- Cycle 6 ---
+    {"role": "user", "content": "Brain fog returning—can’t decide where to start. 焦虑 迟滞"},
+    {"role": "assistant", "content": "Tiny start: 60-second sketch of the intro. 微任务 拆解"},
+    {"role": "user", "content": "Before that, 4-7-8 breathing once. 放松 呼吸法"},
+    {"role": "assistant", "content": "Inhale 4, hold 7, exhale 8—repeat x2. 放松 生理安抚"},
+    {"role": "user", "content": "Focus window 30m: intro + summary bullets. 专注 时间盒"},
+    {"role": "assistant", "content": "I’ll guard the window; distractions parked in an ‘idea lot’. 专注 隔离干扰"},
+
+    # --- Cycle 7 ---
+    {"role": "user", "content": "Palms sweaty—calendar packed. 焦虑 超负荷"},
+    {"role": "assistant", "content": "We’ll protect one deep-work block; meetings trimmed. 边界 优化"},
+    {"role": "user", "content": "Quick foam-rolling and neck release. 放松 肌肉放松"},
+    {"role": "assistant", "content": "Slow pressure, breathe out on tender spots. 放松 指导"},
+    {"role": "user", "content": "Lock in on the data viz polish. 专注 打磨"},
+    {"role": "assistant", "content": "Define ‘done’: consistent scales, labels, legend order. 执行 验收标准"},
+
+    # --- Cycle 8 ---
+    {"role": "user", "content": "Rumination loop again—what if the demo fails? 焦虑 复燃"},
+    {"role": "assistant", "content": "We’ll pre-mortem in 3 lines, then return to tasks. 稳定 预案"},
+    {"role": "user", "content": "Calm tea + 90-second eyes-closed reset. 放松 休整"},
+    {"role": "assistant", "content": "Set a gentle timer; relax brow and shoulders. 放松 身心同步"},
+    {"role": "user", "content": "Focus: integrate examples and push the draft. 专注 合并 提交"},
+    {"role": "assistant", "content": "Pushed to branch; we’ll request review after unit tests. 执行 收尾"},
+]
 
 # ------------------------------
 # Demo run
 # ------------------------------
 if __name__ == "__main__":
     P0_demo = {"O": 0.55, "C": 0.65, "E": 0.35, "A": 0.70, "N": 0.40}
-    llm = QwenBailianClient()
+    llm = llmClient()
     tracker = PersonaStateTracker(
         P0=P0_demo,
         predictor=HeuristicMotivePredictor(
@@ -219,24 +289,6 @@ if __name__ == "__main__":
         regression_scale=0.6, eps_near=0.05,
         rng=random.Random(7)
     )
-    dialogue = [
-        {
-            "role": "system",
-            "content": "This is a conversation between two colleagues discussing work, stress, collaboration, and routines. The assistant should respond in a natural and supportive way, reflecting creativity, practicality, or empathy depending on the user’s message."
-        },
-        {"role": "user", "content": "Let's plan a detailed schedule for the week. I want a strict routine. 规划 计划"},
-        {"role": "assistant", "content": "I feel anxious about deadlines… kind of stressed lately. 焦虑 紧张"},
-        {"role": "user", "content": "Maybe we should relax and take a calm walk, keep it chill. 放松 冷静"},
-        {"role": "assistant", "content": "Let's explore a novel idea for the project; something creative, imaginative."},
-        {"role": "user", "content": "I'd like to meet the team, talk through ideas, maybe a quick call. 社交 开麦"},
-        {"role": "assistant", "content": "Sorry about earlier—thanks for your help; I appreciate your support. 抱歉 感谢 合作"},
-        {"role": "user", "content": "I prefer to work alone today—quiet focus time, no meetings. 独处 低调"},
-        {"role": "assistant", "content": "Ugh, procrastinated again… I'll do it later. 摸鱼"},
-        {"role": "user", "content": "Boring routine tasks today, let's just get practical stuff done. 务实"},
-        {"role": "assistant", "content": "We should be kind and supportive; avoid blame and arguing. 体谅 合作"},
-        {"role": "user", "content": "Deadlines are near—organize the tasks and commit to a plan. 准时 自律"},
-        {"role": "assistant", "content": "Feeling a bit anxious again, can't stop worrying about outcomes. 焦虑"},
-    ]
 
     traj = tracker.run_dialogue(dialogue)
     logger.info(json.dumps(traj, ensure_ascii=False, indent=2))

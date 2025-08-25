@@ -8,6 +8,9 @@ import gradio as gr
 from loguru import logger
 from openai import OpenAI
 
+from prompt import big5_system_prompts_en, SYSTEM_PROMPT
+from predictor import llmClient
+import time
 # ==============================
 # Loguru：JSON 行日志 + 轮转
 # ==============================
@@ -32,16 +35,14 @@ def log_json(event: str, **kwargs):
 # ==============================
 # OpenAI 客户端
 # ==============================
-def build_client() -> OpenAI:
-    base_url = os.getenv("OPENAI_BASE_URL")
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("缺少环境变量 OPENAI_API_KEY")
-    if base_url:
-        return OpenAI(api_key=api_key, base_url=base_url)
-    return OpenAI(api_key=api_key)
 
-client = build_client()
+client = llmClient(
+    model="gpt-4o-mini",
+    api_key=os.getenv("OPENAI_API_KEY"),
+    base_url=os.getenv("OPENAI_BASE_URL"),
+    temperature=1,
+    timeout=60,
+    )
 
 
 # ==============================
@@ -60,6 +61,43 @@ def history_to_messages(hist: History) -> list:
     return msgs
 
 
+from math import isfinite
+
+def _nearest_key(d: dict[float, str], v: float) -> float:
+    """从字典 d 的键中选距离 v 最近的一个（键为 0.0~1.0 的离散点）"""
+    keys = list(d.keys())
+    # 兜底：如果字典为空（不太可能），直接返回 v 四舍五入到 1 位小数
+    if not keys:
+        return round(v, 1)
+    # 正常从已有键里挑最近
+    return min(keys, key=lambda k: abs(k - v))
+
+def generate_dynamic_system_prompt(
+    base_text: str,
+    enable_base: bool,
+    vals: dict[str, float],
+    table: dict[str, dict[float, str]],
+) -> str:
+    """组合基础提示词 + 五维人格分档提示词"""
+    parts = []
+    if enable_base and base_text.strip():
+        parts.append(base_text.strip())
+
+    for trait in ["O", "C", "E", "A", "N"]:
+        v = vals.get(trait, None)
+        if v is None or not isfinite(v):
+            continue
+        if v < 0.0 or v > 1.0:
+            raise ValueError(f"{trait} must be in [0.0, 1.0], got {v}")
+
+        bucket = round(v, 1)
+        # 若该档不存在，用最近的键兜底
+        if bucket not in table[trait]:
+            bucket = _nearest_key(table[trait], bucket)
+        parts.append(table[trait][bucket])
+
+    return " ".join(parts).strip()
+
 # ==============================
 # 核心对话（流式）+ 日志
 # ==============================
@@ -75,7 +113,7 @@ def stream_chat(
     if not session_id:
         session_id = str(uuid.uuid4())
 
-    # 组装 messages
+    # 拼 messages
     messages = []
     if system_prompt.strip():
         messages.append({"role": "system", "content": system_prompt.strip()})
@@ -86,7 +124,6 @@ def stream_chat(
             messages.append({"role": "assistant", "content": assistant_msg})
     messages.append({"role": "user", "content": message})
 
-    # 日志：本轮开始 & 用户消息
     log_json(
         "round_start",
         session_id=session_id,
@@ -98,30 +135,30 @@ def stream_chat(
     )
     log_json("user_message", session_id=session_id, text=message)
 
-    # OpenAI Chat Completions（流式）
-    stream = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        temperature=temperature,
-        max_tokens=max_tokens if max_tokens and max_tokens > 0 else None,
-        stream=True,
-    )
-
     partial = ""
     try:
-        for chunk in stream:
-            if not chunk.choices:
-                    continue
-            choice = chunk.choices[0]
-            delta = getattr(choice, "delta", None)
-            if delta and delta.content:
-                partial += delta.content
-                yield partial
+        # 同步 UI 选择到 llmClient
+        client.change_model(model)
+        client.change_temperature(temperature)
+
+        t0 = time.time()
+        for i, inc in enumerate(client.chat_stream(
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens if (max_tokens and max_tokens > 0) else None,
+        ), start=1):
+            partial += inc
+            # 这里打印进度日志：第几块，增量长度，总长度，耗时
+            logger.info(f"[stream_chat] chunk={i}, inc_len={len(inc)}, total_len={len(partial)}, elapsed={time.time()-t0:.2f}s")
+            yield partial
+
         log_json("assistant_message", session_id=session_id, text=partial)
         log_json("round_end", session_id=session_id, tokens=len(partial))
+        logger.success(f"[stream_chat] finished, total_len={len(partial)}, elapsed={time.time()-t0:.2f}s")
     except Exception as e:
         err = f"{type(e).__name__}: {e}"
         log_json("error", session_id=session_id, where="stream_chat", detail=err)
+        logger.error(f"[stream_chat] error: {err}")
         yield partial + f"\n\n[Error] {err}"
 
 
@@ -132,7 +169,8 @@ DESCRIPTION = """
 # Big5Tragectory 聊天助手（Gradio + OpenAI）
 """
 
-EXAMPLE_SYSTEM = "你是一个有帮助、严谨且简洁的中文助理。"
+EXAMPLE_SYSTEM = SYSTEM_PROMPT
+
 DEFAULT_MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1", "gpt-3.5-turbo","gpt-5-nano-2025-08-07","gpt-5-chat-latest","o3", "o3-mini", "o1", "o1-mini"]
 
 EXAMPLES = [
@@ -168,7 +206,7 @@ with gr.Blocks(css="footer {visibility: hidden}") as demo:
     with gr.Row():
         with gr.Column(scale=3):
             system_box = gr.Textbox(
-                label="System Prompt（系统提示词）",
+                label="System Prompt（基础提示词）",
                 value=EXAMPLE_SYSTEM,
                 placeholder="可为空；用于限定助手角色与边界",
                 lines=6,
@@ -194,6 +232,24 @@ with gr.Blocks(css="footer {visibility: hidden}") as demo:
                 precision=0,
             )
 
+    # ← 在这下面加“人格面板”
+    with gr.Accordion("🧠 Personality (OCEAN)", open=True):
+        with gr.Row():
+            enable_base_ck = gr.Checkbox(value=True, label="启用基础提示词（上面的 System Prompt）")
+        with gr.Row():
+            O_slider = gr.Slider(0.0, 1.0, value=0.5, step=0.1, label="O - Openness")
+            C_slider = gr.Slider(0.0, 1.0, value=0.5, step=0.1, label="C - Conscientiousness")
+            E_slider = gr.Slider(0.0, 1.0, value=0.5, step=0.1, label="E - Extraversion")
+            A_slider = gr.Slider(0.0, 1.0, value=0.5, step=0.1, label="A - Agreeableness")
+            N_slider = gr.Slider(0.0, 1.0, value=0.5, step=0.1, label="N - Neuroticism")
+        dyn_prompt_preview = gr.Textbox(
+            label="🧩 动态系统提示词（只读预览）",
+            value="",
+            lines=6,
+            interactive=False,
+        )
+
+
     session_md = gr.Markdown("")
 
     # Chat 显示 + 输入框 + 按钮
@@ -210,6 +266,32 @@ with gr.Blocks(css="footer {visibility: hidden}") as demo:
         log_json("session_init", session_id=sid)
         return sid, md
 
+    def _update_dyn_prompt(base_text, enable_base, O, C, E, A, N):
+        vals = {"O": O, "C": C, "E": E, "A": A, "N": N}
+        try:
+            return generate_dynamic_system_prompt(
+                base_text=base_text,
+                enable_base=bool(enable_base),
+                vals=vals,
+                table=big5_system_prompts_en,
+            )
+        except Exception as e:
+            return f"[动态提示词生成错误] {type(e).__name__}: {e}"
+
+    # 绑定变化：任一控件变化就刷新预览
+    for comp in [system_box, enable_base_ck, O_slider, C_slider, E_slider, A_slider, N_slider]:
+        comp.change(
+            _update_dyn_prompt,
+            inputs=[system_box, enable_base_ck, O_slider, C_slider, E_slider, A_slider, N_slider],
+            outputs=[dyn_prompt_preview],
+        )
+
+    # 初次加载时也计算一次
+    demo.load(
+        _update_dyn_prompt,
+        inputs=[system_box, enable_base_ck, O_slider, C_slider, E_slider, A_slider, N_slider],
+        outputs=[dyn_prompt_preview],
+    )
     demo.load(_init_session, inputs=None, outputs=[session_state, session_md])
     # --- 提交流程：分两步 ---
 

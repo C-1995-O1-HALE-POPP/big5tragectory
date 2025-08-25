@@ -3,3 +3,6 @@ __pycache__
 *.pyc
 *.pyo
 chat_history.jsonl
+.DS_Store
+.vscode
+logs

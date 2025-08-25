@@ -1,7 +1,585 @@
-{"event": "session_init", "session_id": "585e6de7-b05c-4882-ab16-1c03b5d82253"}
-{"event": "session_init", "session_id": "7138e8b4-8c9c-4f3e-b0b0-56c3c0de3e60"}
-{"event": "round_start", "session_id": "7138e8b4-8c9c-4f3e-b0b0-56c3c0de3e60", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 0}
-{"event": "user_message", "session_id": "7138e8b4-8c9c-4f3e-b0b0-56c3c0de3e60", "text": "ping"}
-{"event": "session_init", "session_id": "11bc8d51-1924-4861-99ff-e6ad16ffe517"}
-{"event": "round_start", "session_id": "11bc8d51-1924-4861-99ff-e6ad16ffe517", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 0}
-{"event": "user_message", "session_id": "11bc8d51-1924-4861-99ff-e6ad16ffe517", "text": "111"}
+{"event": "round_start", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 0}
+{"event": "user_message", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "text": "用 8 行以内代码写一个 Python 冒泡排序示例。"}
+{"event": "assistant_message", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "text": "下面是一个简单的 Python 冒泡排序示例：\n\n```python\ndef bubble_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        for j in range(0, n-i-1):\n            if arr[j] > arr[j+1]:\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n    return arr\n\n# 示例\nprint(bubble_sort([64, 34, 25, 12, 22, 11, 90]))\n```\n\n这个代码定义了一个冒泡排序函数，并对一个示例数组进行了排序。"}
+{"event": "round_end", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "tokens": 322}
+{"event": "round_start", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 1}
+{"event": "user_message", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "text": "你之前给了我什么程序"}
+{"event": "assistant_message", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "text": "我之前给了你一个 Python 冒泡排序的示例程序，代码如下：\n\n```python\ndef bubble_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        for j in range(0, n-i-1):\n            if arr[j] > arr[j+1]:\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n    return arr\n\n# 示例\nprint(bubble_sort([64, 34, 25, 12, 22, 11, 90]))\n```\n\n这个程序定义了一个 `bubble_sort` 函数，用于对输入的数组进行冒泡排序，并打印排序后的结果。"}
+{"event": "round_end", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "tokens": 352}
+{"event": "round_start", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 2}
+{"event": "user_message", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "text": "抱抱"}
+{"event": "assistant_message", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "text": "抱抱！如果你有任何问题或需要帮助的地方，请随时告诉我！"}
+{"event": "round_end", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "tokens": 27}
+{"event": "round_start", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 3}
+{"event": "user_message", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "text": "你是什么模型"}
+{"event": "assistant_message", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "text": "我是基于 OpenAI 的 GPT-3 模型，专门用于提供信息和回答问题。如果你有任何疑问或需要帮助，欢迎随时询问！"}
+{"event": "round_end", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "tokens": 58}
+{"event": "round_start", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "model": "gpt-4o", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 4}
+{"event": "user_message", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "text": "你是什么模型"}
+{"event": "assistant_message", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "text": "我是 OpenAI 开发的 GPT-4 模型的一个实例。GPT 是 \"Generative Pre-trained Transformer\" 的缩写，我是一个基于大规模语言模型的人工智能助手，可以用来回答问题、解决问题、提供建议以及处理各种文本任务。\n\n如果你需要更多关于我的工作原理或能力的解释，也可以随时问我！😊"}
+{"event": "round_end", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "tokens": 158}
+{"event": "round_start", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "model": "gpt-4.1-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 5}
+{"event": "user_message", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "text": "你是什么模型"}
+{"event": "error", "session_id": "59699947-5ed4-495e-9d4b-10626f0b9464", "where": "stream_chat", "detail": "IndexError: list index out of range"}
+{"event": "session_init", "session_id": "57844000-fd2f-469f-a756-967964bbab99"}
+{"event": "round_start", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 0}
+{"event": "user_message", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "text": "用 8 行以内代码写一个 Python 冒泡排序示例。"}
+{"event": "assistant_message", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "text": "下面是一个简单的 Python 冒泡排序示例：\n\n```python\ndef bubble_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        for j in range(0, n-i-1):\n            if arr[j] > arr[j+1]:\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n    return arr\n\n# 示例使用\nprint(bubble_sort([64, 34, 25, 12, 22, 11, 90]))\n```\n\n这段代码实现了冒泡排序，并输出排序后的结果。"}
+{"event": "round_end", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "tokens": 316}
+{"event": "round_start", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "model": "gpt-4o", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 1}
+{"event": "user_message", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "text": ""}
+{"event": "assistant_message", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "text": "如果你有任何问题或需要进一步解释，请随时告诉我！ 😊"}
+{"event": "round_end", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "tokens": 26}
+{"event": "round_start", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "model": "gpt-4o", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 0}
+{"event": "user_message", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "text": "把这段话翻译成英文：'并行计算的关键在于任务划分与数据局部性。'"}
+{"event": "assistant_message", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "text": "The key to parallel computing lies in task partitioning and data locality."}
+{"event": "round_end", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "tokens": 74}
+{"event": "round_start", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "model": "gpt-4.1-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 1}
+{"event": "user_message", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "text": "gpt-5-chat-latest"}
+{"event": "assistant_message", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "text": "抱歉，我现在是基于GPT-4架构的模型，还没有GPT-5版本。如果你有任何问题或需要帮助，请告诉我！"}
+{"event": "round_end", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "tokens": 50}
+{"event": "round_start", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "model": "gpt-4.1", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 2}
+{"event": "user_message", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "text": "gpt-5-chat-latest"}
+{"event": "error", "session_id": "57844000-fd2f-469f-a756-967964bbab99", "where": "stream_chat", "detail": "IndexError: list index out of range"}
+{"event": "round_start", "session_id": "74c1240b-6f0f-427f-93f3-68a56aa939f4", "model": "gpt-4.1", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 0}
+{"event": "user_message", "session_id": "74c1240b-6f0f-427f-93f3-68a56aa939f4", "text": "if not chunk.choices:\n        continue"}
+{"event": "assistant_message", "session_id": "74c1240b-6f0f-427f-93f3-68a56aa939f4", "text": "这是Python代码片段，意思是：\n\n如果 chunk.choices 为空（也就是没有元素），则跳过当前循环，继续处理下一个 chunk。\n\n详细解释如下：\n\n- if not chunk.choices:  \n  检查 chunk.choices 是否为空或为假值（如 None、[]、{} 等）。\n- continue  \n  跳过本次循环剩下的语句，直接进入下一次循环。\n\n常见应用场景：  \n遍历一组 chunk 时，如果某个 chunk 没有 choices，就不处理这个 chunk，直接处理下一个。\n\n示例代码：\n\nfor chunk in chunks:\n    if not chunk.choices:\n        continue\n    # 这里处理有 choices 的 chunk\n\n意思就是只处理有 choices 的 chunk，忽略掉没有 choices 的。"}
+{"event": "round_end", "session_id": "74c1240b-6f0f-427f-93f3-68a56aa939f4", "tokens": 400}
+{"event": "session_init", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9"}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "gpt-3.5-turbo", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 0}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "我喜欢你"}
+{"event": "assistant_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "谢谢！如果你有任何问题或需要帮助，请随时告诉我。"}
+{"event": "round_end", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "tokens": 24}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "gpt-5-nano-2025-08-07", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 1}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "我喜欢你"}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "gpt-5-nano-2025-08-07", "temperature": 1.0, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 2}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": ""}
+{"event": "assistant_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "谢谢你！很高兴能帮到你。如果你有任何问题、想学新知识，或想聊聊其他话题，随时告诉我。"}
+{"event": "round_end", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "tokens": 42}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "gpt-5-chat-latest", "temperature": 1.0, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 3}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "if not chunk.choices:\n        continue"}
+{"event": "assistant_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "你给的代码片段：  \n```python\nif not chunk.choices:\n    continue\n```\n\n这是 Python 中的一段条件判断和循环控制语句，常见于流式读取或遍历数据的场景。\n\n**作用解释：**\n\n1. `chunk.choices` — 表示 `chunk` 这个对象里有一个名为 `choices` 的属性，通常是一个列表或可迭代对象。\n2. `if not chunk.choices` — 在 Python 中，如果 `chunk.choices` 是空列表 (`[]`)、`None`、空字符串等“假值”，这个条件会成立。\n3. `continue` — 表示跳过当前循环的剩余代码，直接进入下一轮迭代。\n\n**综合来说：**  \n这段代码的意思是：  \n> 如果当前这个 `chunk` 没有任何 `choices`（为空），就直接跳过，处理下一个 `chunk`。\n\n---\n\n如果你愿意，我可以帮你把这一段放到一个完整的示例里，让逻辑更清楚。你需要我这样做吗？"}
+{"event": "round_end", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "tokens": 455}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "o3", "temperature": 1.0, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 4}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "if not chunk.choices:\n        continue"}
+{"event": "assistant_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "这两行代码通常出现在遍历（for 循环）一批 `chunk` 对象的场景中，用来过滤掉那些 `choices` 为空的 `chunk`。简要说明如下：\n\n1. `if not chunk.choices:`  \n   • 判断当前 `chunk` 的 `choices` 属性是否为空或为“假值”（如 `[]`、`None`）。  \n2. `continue`  \n   • 如果条件为真，则跳过本次循环剩余的代码，直接进入下一个 `chunk`。\n\n等价语义：  \n“如果这个 `chunk` 没有有效的 `choices`，就别管它，继续处理下一个。”\n\n示例演示（假设我们在处理流式 API 返回值）：\n\n```python\nfor chunk in stream_response:\n    # 若该 chunk 没有 choices，跳过\n    if not chunk.choices:\n        continue\n\n    # 若有 choices，拿出第一条 delta 内容\n    delta = chunk.choices[0].delta\n    if hasattr(delta, \"content\") and delta.content:\n        print(delta.content, end=\"\", flush=True)\n```\n\n如果你想了解：\n1. `chunk` 的数据结构如何定义？\n2. `choices` 可能包含哪些字段？\n3. 这一段在整体逻辑里扮演什么角色？\n\n可以继续告诉我，我再详细展开。"}
+{"event": "round_end", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "tokens": 681}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "o3-mini", "temperature": 1.0, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 5}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "if not chunk.choices:\n        continue"}
+{"event": "assistant_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "这段代码的核心逻辑是：  \n1. 判断当前 chunk 对象的 choices 属性是否为空或为假（例如：空列表 []、None 等）。  \n2. 如果是，就执行 continue，跳过当前循环的剩余部分，直接进入下一次循环。\n\n举个例子，假设你正在遍历一个列表，其中包含了多个 chunk 对象，每个对象可能包含一个 choices 列表。如果一个 chunk 里的 choices 列表为空，则不需要对这个 chunk 进行处理，通过 continue 就能直接跳过，以免后续的代码出错或不必要地执行。"}
+{"event": "round_end", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "tokens": 253}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 6}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "把这段话翻译成英文：'并行计算的关键在于任务划分与数据局部性。'"}
+{"event": "assistant_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "The key to parallel computing lies in task partitioning and data locality."}
+{"event": "round_end", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "tokens": 74}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 7}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "返回我说的全部内容"}
+{"event": "assistant_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "当然可以。你之前说的内容包括：\n\n1. \"我喜欢你\"\n2. \"if not chunk.choices: continue\"\n3. \"把这段话翻译成英文：'并行计算的关键在于任务划分与数据局部性。'\"\n\n如果还有其他内容或者需要进一步的帮助，请告诉我！"}
+{"event": "round_end", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "tokens": 126}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 8}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "今天星期几"}
+{"event": "assistant_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "今天是星期几取决于你所在的时区和当前日期。你可以通过查询设备的日历或使用在线日期工具来确认。如果你告诉我今天的日期，我可以帮你计算出是星期几。"}
+{"event": "round_end", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "tokens": 71}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 9}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "ping"}
+{"event": "assistant_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "你好！请问有什么我可以帮助你的吗？"}
+{"event": "round_end", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "tokens": 17}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 10}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "用 8 行以内代码写一个 Python 冒泡排序示例。"}
+{"event": "assistant_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "以下是一个简单的 Python 冒泡排序示例，代码在 8 行以内：\n\n```python\ndef bubble_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        for j in range(0, n-i-1):\n            if arr[j] > arr[j+1]:\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n    return arr\n\n# 示例\nprint(bubble_sort([64, 34, 25, 12, 22, 11, 90]))\n```\n\n这个函数 `bubble_sort` 接受一个列表 `arr`，对其进行排序并返回排序后的列表。"}
+{"event": "round_end", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "tokens": 350}
+{"event": "round_start", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 11}
+{"event": "user_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "把这段话翻译成英文：'并行计算的关键在于任务划分与数据局部性。'"}
+{"event": "assistant_message", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "text": "The key to parallel computing lies in task partitioning and data locality."}
+{"event": "round_end", "session_id": "2d52c72e-01c5-400b-83a8-3f86ba5342a9", "tokens": 74}
+{"event": "session_init", "session_id": "0a52e003-0941-48bc-8a38-f49d1a8abac2"}
+{"event": "session_init", "session_id": "0943044b-2eed-4590-ad2f-975c2d4b8e77"}
+{"event": "round_start", "session_id": "0943044b-2eed-4590-ad2f-975c2d4b8e77", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 0}
+{"event": "user_message", "session_id": "0943044b-2eed-4590-ad2f-975c2d4b8e77", "text": "你好"}
+{"event": "assistant_message", "session_id": "0943044b-2eed-4590-ad2f-975c2d4b8e77", "text": "你好！有什么我可以帮助你的吗？"}
+{"event": "round_end", "session_id": "0943044b-2eed-4590-ad2f-975c2d4b8e77", "tokens": 15}
+{"event": "round_start", "session_id": "0943044b-2eed-4590-ad2f-975c2d4b8e77", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "你是一个有帮助、严谨且简洁的中文助理。", "history_turns": 1}
+{"event": "user_message", "session_id": "0943044b-2eed-4590-ad2f-975c2d4b8e77", "text": "我是傻逼"}
+{"event": "assistant_message", "session_id": "0943044b-2eed-4590-ad2f-975c2d4b8e77", "text": "每个人都有感觉不好的时候，不要太自责。如果你愿意，可以和我分享你的想法或困扰，我会尽力帮助你。"}
+{"event": "round_end", "session_id": "0943044b-2eed-4590-ad2f-975c2d4b8e77", "tokens": 47}
+{"event": "session_init", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b"}
+{"event": "round_start", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 0}
+{"event": "user_message", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "text": "I just faiiled my exam. How do you see this?"}
+{"event": "assistant_message", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "text": "I'm really sorry to hear that you didn't pass your exam. It can be very disappointing, but it's important to remember that many people experience setbacks like this at some point in their lives. It can be an opportunity to learn and grow. Take some time to reflect on what might have gone wrong, and consider how you can prepare differently for next time. If you're feeling overwhelmed, it might help to talk about it or to seek support from friends, family, or a mentor. Remember, one exam doesn't define your abilities or your future!"}
+{"event": "round_end", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "tokens": 536}
+{"event": "round_start", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 1}
+{"event": "user_message", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "text": "I just faiiled my exam. How do you see this?"}
+{"event": "assistant_message", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "text": "I'm really sorry to hear that you didn't pass your exam. It can be tough to face setbacks like this, but it's important to remember that failure is often a stepping stone to success. This experience can provide valuable insights into what you need to improve. \n\nTake some time to reflect on what happened—were there specific areas where you struggled? Did you feel prepared? Identifying these factors can help you create a plan for your next steps. Consider reaching out for support, whether it's from teachers, classmates, or study groups. Remember, many successful people have faced failures before achieving their goals. This is just one moment in your journey, and it doesn't define your potential. Keep pushing forward!"}
+{"event": "round_end", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "tokens": 724}
+{"event": "round_start", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 2}
+{"event": "user_message", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "text": "I just faiiled my exam. How do you see this?"}
+{"event": "assistant_message", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "text": "I'm sorry to hear that you didn't pass your exam. It can be really tough to deal with disappointment like that. It's important to recognize that failing an exam doesn't define your worth or your abilities. Many successful people have faced setbacks and used them as learning opportunities.\n\nConsider reflecting on what might have led to this outcome. Was it a matter of study habits, test anxiety, or perhaps not understanding the material as well as you thought? This could be a chance to reassess your study strategies, seek help, and prepare differently for the future.\n\nIt’s okay to feel upset about this, but try to view it as a stepping stone rather than a roadblock. You have the opportunity to learn and grow from this experience. If you need support, don’t hesitate to reach out to friends, family, or teachers. You’re not alone in this, and you can bounce back!"}
+{"event": "round_end", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "tokens": 871}
+{"event": "round_start", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 0}
+{"event": "user_message", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "text": "What is your attitude towards making friends?"}
+{"event": "assistant_message", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "text": "As an AI, I don't have personal feelings or attitudes, but I understand that making friends can be a valuable and enriching experience for people. Building friendships can provide support, companionship, and opportunities for personal growth. If you have questions about making friends or need tips on how to build and maintain friendships, I’d be happy to help!"}
+{"event": "round_end", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "tokens": 362}
+{"event": "round_start", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 1}
+{"event": "user_message", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "text": "What is your attitude towards making friends?"}
+{"event": "assistant_message", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "text": "I don't have personal feelings or attitudes, but I can understand the importance of friendship in human relationships. Making friends can lead to meaningful connections, emotional support, and shared experiences, which are all beneficial for well-being. If you're looking for advice or tips on making friends, I'd love to assist you!"}
+{"event": "round_end", "session_id": "bf0841bc-e8be-4f17-a41c-cb1295a12c0b", "tokens": 333}
+QwenBailianClient init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=1
+{"event": "session_init", "session_id": "04ffd8ec-d18c-4c59-8d62-628cce7eded5"}
+LLM change model to gpt-4o-mini
+LLM change temperature to 0.7
+{"event": "round_start", "session_id": "04ffd8ec-d18c-4c59-8d62-628cce7eded5", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 0}
+{"event": "user_message", "session_id": "04ffd8ec-d18c-4c59-8d62-628cce7eded5", "text": "how is the day"}
+LLM change model to gpt-4o-mini
+LLM change temperature to 0.7
+{"event": "assistant_message", "session_id": "04ffd8ec-d18c-4c59-8d62-628cce7eded5", "text": "I'm just a computer program, so I don't experience days like humans do, but I'm here to help you! How can I assist you today?"}
+{"event": "round_end", "session_id": "04ffd8ec-d18c-4c59-8d62-628cce7eded5", "tokens": 125}
+LLM change model to gpt-4.1-mini
+LLM change temperature to 0.7
+{"event": "round_start", "session_id": "04ffd8ec-d18c-4c59-8d62-628cce7eded5", "model": "gpt-4.1-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 1}
+{"event": "user_message", "session_id": "04ffd8ec-d18c-4c59-8d62-628cce7eded5", "text": ""}
+LLM change model to gpt-4.1-mini
+LLM change temperature to 0.7
+{"event": "assistant_message", "session_id": "04ffd8ec-d18c-4c59-8d62-628cce7eded5", "text": "It looks like your message was empty. How can I assist you today?"}
+{"event": "round_end", "session_id": "04ffd8ec-d18c-4c59-8d62-628cce7eded5", "tokens": 65}
+LLM change model to gpt-4.1-mini
+LLM change temperature to 0.7
+{"event": "round_start", "session_id": "04ffd8ec-d18c-4c59-8d62-628cce7eded5", "model": "gpt-4.1-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 2}
+{"event": "user_message", "session_id": "04ffd8ec-d18c-4c59-8d62-628cce7eded5", "text": "11"}
+LLM change model to gpt-4.1-mini
+LLM change temperature to 0.7
+{"event": "session_init", "session_id": "0a7d2834-d71f-4d49-89c1-8d466bc073e6"}
+{"event": "session_init", "session_id": "ec743e4b-3f1c-4068-a862-61cb73b2b61d"}
+QwenBailianClient init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=1
+{"event": "session_init", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659"}
+{"event": "round_start", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 0}
+{"event": "user_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "oi"}
+LLM change model to gpt-4o-mini
+LLM change temperature to 0.7
+[stream_chat] chunk=1, inc_len=2, total_len=2, elapsed=1.73s
+[stream_chat] chunk=2, inc_len=1, total_len=3, elapsed=1.73s
+[stream_chat] chunk=3, inc_len=5, total_len=8, elapsed=1.73s
+[stream_chat] chunk=4, inc_len=6, total_len=14, elapsed=1.73s
+[stream_chat] chunk=5, inc_len=7, total_len=21, elapsed=1.75s
+[stream_chat] chunk=6, inc_len=5, total_len=26, elapsed=1.76s
+[stream_chat] chunk=7, inc_len=5, total_len=31, elapsed=1.77s
+[stream_chat] chunk=8, inc_len=1, total_len=32, elapsed=1.77s
+{"event": "assistant_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "Oi! Como posso ajudar você hoje?"}
+{"event": "round_end", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "tokens": 32}
+[stream_chat] finished, total_len=32, elapsed=1.94s
+{"event": "round_start", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "model": "gpt-4o", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 1}
+{"event": "user_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "你在使用什么模型"}
+LLM change model to gpt-4o
+LLM change temperature to 0.7
+[stream_chat] chunk=1, inc_len=1, total_len=1, elapsed=0.97s
+[stream_chat] chunk=2, inc_len=2, total_len=3, elapsed=0.98s
+[stream_chat] chunk=3, inc_len=2, total_len=5, elapsed=0.99s
+[stream_chat] chunk=4, inc_len=4, total_len=9, elapsed=1.00s
+[stream_chat] chunk=5, inc_len=2, total_len=11, elapsed=1.02s
+[stream_chat] chunk=6, inc_len=2, total_len=13, elapsed=1.03s
+[stream_chat] chunk=7, inc_len=2, total_len=15, elapsed=1.05s
+[stream_chat] chunk=8, inc_len=1, total_len=16, elapsed=1.05s
+[stream_chat] chunk=9, inc_len=2, total_len=18, elapsed=1.06s
+[stream_chat] chunk=10, inc_len=2, total_len=20, elapsed=1.07s
+[stream_chat] chunk=11, inc_len=1, total_len=21, elapsed=1.08s
+[stream_chat] chunk=12, inc_len=2, total_len=23, elapsed=1.08s
+[stream_chat] chunk=13, inc_len=2, total_len=25, elapsed=1.09s
+[stream_chat] chunk=14, inc_len=2, total_len=27, elapsed=1.10s
+[stream_chat] chunk=15, inc_len=1, total_len=28, elapsed=1.19s
+[stream_chat] chunk=16, inc_len=1, total_len=29, elapsed=1.19s
+[stream_chat] chunk=17, inc_len=1, total_len=30, elapsed=1.19s
+[stream_chat] chunk=18, inc_len=3, total_len=33, elapsed=1.19s
+[stream_chat] chunk=19, inc_len=1, total_len=34, elapsed=1.19s
+[stream_chat] chunk=20, inc_len=1, total_len=35, elapsed=1.20s
+[stream_chat] chunk=21, inc_len=1, total_len=36, elapsed=1.20s
+[stream_chat] chunk=22, inc_len=1, total_len=37, elapsed=1.20s
+[stream_chat] chunk=23, inc_len=2, total_len=39, elapsed=1.21s
+[stream_chat] chunk=24, inc_len=2, total_len=41, elapsed=1.21s
+[stream_chat] chunk=25, inc_len=1, total_len=42, elapsed=1.21s
+[stream_chat] chunk=26, inc_len=3, total_len=45, elapsed=1.21s
+[stream_chat] chunk=27, inc_len=1, total_len=46, elapsed=1.22s
+[stream_chat] chunk=28, inc_len=1, total_len=47, elapsed=1.22s
+[stream_chat] chunk=29, inc_len=2, total_len=49, elapsed=1.24s
+[stream_chat] chunk=30, inc_len=2, total_len=51, elapsed=1.24s
+[stream_chat] chunk=31, inc_len=2, total_len=53, elapsed=1.25s
+[stream_chat] chunk=32, inc_len=2, total_len=55, elapsed=1.25s
+[stream_chat] chunk=33, inc_len=2, total_len=57, elapsed=1.27s
+[stream_chat] chunk=34, inc_len=2, total_len=59, elapsed=1.27s
+[stream_chat] chunk=35, inc_len=1, total_len=60, elapsed=1.28s
+[stream_chat] chunk=36, inc_len=1, total_len=61, elapsed=1.28s
+[stream_chat] chunk=37, inc_len=1, total_len=62, elapsed=1.30s
+[stream_chat] chunk=38, inc_len=1, total_len=63, elapsed=1.31s
+[stream_chat] chunk=39, inc_len=1, total_len=64, elapsed=1.31s
+{"event": "assistant_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "我使用的是OpenAI开发的大型语言模型。具体来说，我是基于GPT-3.5进行训练的。如果你有任何问题或者需要帮助，请随时提问！"}
+{"event": "round_end", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "tokens": 64}
+[stream_chat] finished, total_len=64, elapsed=1.32s
+{"event": "round_start", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "model": "gpt-4.1-mini", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 2}
+{"event": "user_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "你在使用什么模型"}
+LLM change model to gpt-4.1-mini
+LLM change temperature to 0.7
+[stream_chat] chunk=1, inc_len=2, total_len=2, elapsed=1.05s
+[stream_chat] chunk=2, inc_len=1, total_len=3, elapsed=1.05s
+[stream_chat] chunk=3, inc_len=1, total_len=4, elapsed=1.07s
+[stream_chat] chunk=4, inc_len=4, total_len=8, elapsed=1.07s
+[stream_chat] chunk=5, inc_len=2, total_len=10, elapsed=1.08s
+[stream_chat] chunk=6, inc_len=1, total_len=11, elapsed=1.09s
+[stream_chat] chunk=7, inc_len=3, total_len=14, elapsed=1.10s
+[stream_chat] chunk=8, inc_len=1, total_len=15, elapsed=1.11s
+[stream_chat] chunk=9, inc_len=1, total_len=16, elapsed=1.12s
+[stream_chat] chunk=10, inc_len=1, total_len=17, elapsed=1.12s
+[stream_chat] chunk=11, inc_len=1, total_len=18, elapsed=1.13s
+[stream_chat] chunk=12, inc_len=1, total_len=19, elapsed=1.14s
+[stream_chat] chunk=13, inc_len=2, total_len=21, elapsed=1.15s
+[stream_chat] chunk=14, inc_len=2, total_len=23, elapsed=1.19s
+[stream_chat] chunk=15, inc_len=3, total_len=26, elapsed=1.32s
+[stream_chat] chunk=16, inc_len=1, total_len=27, elapsed=1.32s
+[stream_chat] chunk=17, inc_len=1, total_len=28, elapsed=1.32s
+[stream_chat] chunk=18, inc_len=2, total_len=30, elapsed=1.32s
+[stream_chat] chunk=19, inc_len=2, total_len=32, elapsed=1.32s
+[stream_chat] chunk=20, inc_len=1, total_len=33, elapsed=1.32s
+[stream_chat] chunk=21, inc_len=2, total_len=35, elapsed=1.33s
+[stream_chat] chunk=22, inc_len=2, total_len=37, elapsed=1.35s
+[stream_chat] chunk=23, inc_len=1, total_len=38, elapsed=1.39s
+[stream_chat] chunk=24, inc_len=2, total_len=40, elapsed=1.39s
+[stream_chat] chunk=25, inc_len=1, total_len=41, elapsed=1.39s
+[stream_chat] chunk=26, inc_len=1, total_len=42, elapsed=1.42s
+[stream_chat] chunk=27, inc_len=2, total_len=44, elapsed=1.45s
+[stream_chat] chunk=28, inc_len=1, total_len=45, elapsed=1.46s
+[stream_chat] chunk=29, inc_len=1, total_len=46, elapsed=1.46s
+{"event": "assistant_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "我是基于OpenAI的GPT-4架构的语言模型。如果你有任何问题或需要帮助，欢迎随时告诉我！"}
+{"event": "round_end", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "tokens": 46}
+[stream_chat] finished, total_len=46, elapsed=1.46s
+{"event": "round_start", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "model": "gpt-4.1", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 3}
+{"event": "user_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "你在使用什么模型"}
+LLM change model to gpt-4.1
+LLM change temperature to 0.7
+[stream_chat] chunk=1, inc_len=2, total_len=2, elapsed=1.12s
+[stream_chat] chunk=2, inc_len=1, total_len=3, elapsed=1.15s
+[stream_chat] chunk=3, inc_len=1, total_len=4, elapsed=1.16s
+[stream_chat] chunk=4, inc_len=4, total_len=8, elapsed=1.17s
+[stream_chat] chunk=5, inc_len=2, total_len=10, elapsed=1.18s
+[stream_chat] chunk=6, inc_len=1, total_len=11, elapsed=1.19s
+[stream_chat] chunk=7, inc_len=3, total_len=14, elapsed=1.20s
+[stream_chat] chunk=8, inc_len=1, total_len=15, elapsed=1.21s
+[stream_chat] chunk=9, inc_len=1, total_len=16, elapsed=1.22s
+[stream_chat] chunk=10, inc_len=2, total_len=18, elapsed=1.24s
+[stream_chat] chunk=11, inc_len=2, total_len=20, elapsed=1.26s
+[stream_chat] chunk=12, inc_len=1, total_len=21, elapsed=1.26s
+[stream_chat] chunk=13, inc_len=3, total_len=24, elapsed=1.28s
+[stream_chat] chunk=14, inc_len=2, total_len=26, elapsed=1.28s
+[stream_chat] chunk=15, inc_len=1, total_len=27, elapsed=1.35s
+[stream_chat] chunk=16, inc_len=1, total_len=28, elapsed=1.35s
+[stream_chat] chunk=17, inc_len=2, total_len=30, elapsed=1.36s
+[stream_chat] chunk=18, inc_len=2, total_len=32, elapsed=1.36s
+[stream_chat] chunk=19, inc_len=2, total_len=34, elapsed=1.36s
+[stream_chat] chunk=20, inc_len=1, total_len=35, elapsed=1.36s
+[stream_chat] chunk=21, inc_len=2, total_len=37, elapsed=1.36s
+[stream_chat] chunk=22, inc_len=2, total_len=39, elapsed=1.37s
+[stream_chat] chunk=23, inc_len=3, total_len=42, elapsed=1.39s
+[stream_chat] chunk=24, inc_len=1, total_len=43, elapsed=1.40s
+[stream_chat] chunk=25, inc_len=2, total_len=45, elapsed=1.41s
+[stream_chat] chunk=26, inc_len=1, total_len=46, elapsed=1.42s
+[stream_chat] chunk=27, inc_len=1, total_len=47, elapsed=1.43s
+[stream_chat] chunk=28, inc_len=1, total_len=48, elapsed=1.45s
+[stream_chat] chunk=29, inc_len=1, total_len=49, elapsed=1.45s
+[stream_chat] chunk=30, inc_len=1, total_len=50, elapsed=1.45s
+{"event": "assistant_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "我是基于OpenAI的GPT-4语言模型。  \n如果你有更多关于模型或其他方面的问题，欢迎随时提问！"}
+{"event": "round_end", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "tokens": 50}
+[stream_chat] finished, total_len=50, elapsed=1.46s
+{"event": "round_start", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "model": "gpt-3.5-turbo", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 4}
+{"event": "user_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "你在使用什么模型"}
+LLM change model to gpt-3.5-turbo
+LLM change temperature to 0.7
+[stream_chat] chunk=1, inc_len=2, total_len=2, elapsed=1.08s
+[stream_chat] chunk=2, inc_len=1, total_len=3, elapsed=1.08s
+[stream_chat] chunk=3, inc_len=1, total_len=4, elapsed=1.09s
+[stream_chat] chunk=4, inc_len=4, total_len=8, elapsed=1.09s
+[stream_chat] chunk=5, inc_len=2, total_len=10, elapsed=1.10s
+[stream_chat] chunk=6, inc_len=1, total_len=11, elapsed=1.12s
+[stream_chat] chunk=7, inc_len=3, total_len=14, elapsed=1.12s
+[stream_chat] chunk=8, inc_len=1, total_len=15, elapsed=1.12s
+[stream_chat] chunk=9, inc_len=1, total_len=16, elapsed=1.13s
+[stream_chat] chunk=10, inc_len=2, total_len=18, elapsed=1.13s
+[stream_chat] chunk=11, inc_len=3, total_len=21, elapsed=1.14s
+[stream_chat] chunk=12, inc_len=1, total_len=22, elapsed=1.14s
+[stream_chat] chunk=13, inc_len=1, total_len=23, elapsed=1.15s
+[stream_chat] chunk=14, inc_len=2, total_len=25, elapsed=1.16s
+[stream_chat] chunk=15, inc_len=2, total_len=27, elapsed=1.31s
+[stream_chat] chunk=16, inc_len=3, total_len=30, elapsed=1.32s
+[stream_chat] chunk=17, inc_len=1, total_len=31, elapsed=1.32s
+[stream_chat] chunk=18, inc_len=2, total_len=33, elapsed=1.33s
+[stream_chat] chunk=19, inc_len=2, total_len=35, elapsed=1.33s
+[stream_chat] chunk=20, inc_len=1, total_len=36, elapsed=1.33s
+[stream_chat] chunk=21, inc_len=2, total_len=38, elapsed=1.34s
+[stream_chat] chunk=22, inc_len=2, total_len=40, elapsed=1.34s
+[stream_chat] chunk=23, inc_len=2, total_len=42, elapsed=1.34s
+[stream_chat] chunk=24, inc_len=1, total_len=43, elapsed=1.34s
+[stream_chat] chunk=25, inc_len=1, total_len=44, elapsed=1.34s
+{"event": "assistant_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "我是基于OpenAI的GPT-4模型。如果你有任何具体的问题或需要帮助的地方，请告诉我！"}
+{"event": "round_end", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "tokens": 44}
+[stream_chat] finished, total_len=44, elapsed=1.34s
+{"event": "round_start", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "model": "gpt-5-nano-2025-08-07", "temperature": 0.7, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 5}
+{"event": "user_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "你在使用什么模型"}
+LLM change model to gpt-5-nano-2025-08-07
+LLM change temperature to 0.7
+{"event": "error", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "where": "stream_chat", "detail": "InternalServerError: Error code: 500 - {'error': {'message': \"Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported. (request id: 20250825134226523388484tv65eIO5)\", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}"}
+[stream_chat] error: InternalServerError: Error code: 500 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported. (request id: 20250825134226523388484tv65eIO5)", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+{"event": "round_start", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "model": "gpt-5-nano-2025-08-07", "temperature": 1.0, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 6}
+{"event": "user_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": ""}
+LLM change model to gpt-5-nano-2025-08-07
+LLM change temperature to 1.0
+[stream_chat] chunk=1, inc_len=1, total_len=1, elapsed=4.88s
+[stream_chat] chunk=2, inc_len=2, total_len=3, elapsed=4.88s
+[stream_chat] chunk=3, inc_len=1, total_len=4, elapsed=4.88s
+[stream_chat] chunk=4, inc_len=1, total_len=5, elapsed=4.89s
+[stream_chat] chunk=5, inc_len=1, total_len=6, elapsed=4.89s
+[stream_chat] chunk=6, inc_len=2, total_len=8, elapsed=4.89s
+[stream_chat] chunk=7, inc_len=1, total_len=9, elapsed=4.90s
+[stream_chat] chunk=8, inc_len=2, total_len=11, elapsed=4.91s
+[stream_chat] chunk=9, inc_len=3, total_len=14, elapsed=5.11s
+[stream_chat] chunk=10, inc_len=1, total_len=15, elapsed=5.11s
+[stream_chat] chunk=11, inc_len=2, total_len=17, elapsed=5.11s
+[stream_chat] chunk=12, inc_len=1, total_len=18, elapsed=5.11s
+[stream_chat] chunk=13, inc_len=1, total_len=19, elapsed=5.12s
+[stream_chat] chunk=14, inc_len=1, total_len=20, elapsed=5.12s
+[stream_chat] chunk=15, inc_len=1, total_len=21, elapsed=5.12s
+[stream_chat] chunk=16, inc_len=1, total_len=22, elapsed=5.12s
+[stream_chat] chunk=17, inc_len=1, total_len=23, elapsed=5.12s
+[stream_chat] chunk=18, inc_len=2, total_len=25, elapsed=5.12s
+[stream_chat] chunk=19, inc_len=2, total_len=27, elapsed=5.13s
+[stream_chat] chunk=20, inc_len=1, total_len=28, elapsed=5.13s
+[stream_chat] chunk=21, inc_len=2, total_len=30, elapsed=5.13s
+[stream_chat] chunk=22, inc_len=1, total_len=31, elapsed=5.13s
+[stream_chat] chunk=23, inc_len=5, total_len=36, elapsed=5.13s
+[stream_chat] chunk=24, inc_len=2, total_len=38, elapsed=5.13s
+[stream_chat] chunk=25, inc_len=2, total_len=40, elapsed=5.13s
+[stream_chat] chunk=26, inc_len=4, total_len=44, elapsed=5.13s
+[stream_chat] chunk=27, inc_len=1, total_len=45, elapsed=5.13s
+[stream_chat] chunk=28, inc_len=1, total_len=46, elapsed=5.13s
+[stream_chat] chunk=29, inc_len=3, total_len=49, elapsed=5.14s
+[stream_chat] chunk=30, inc_len=2, total_len=51, elapsed=5.14s
+[stream_chat] chunk=31, inc_len=1, total_len=52, elapsed=5.14s
+[stream_chat] chunk=32, inc_len=2, total_len=54, elapsed=5.14s
+[stream_chat] chunk=33, inc_len=1, total_len=55, elapsed=5.14s
+[stream_chat] chunk=34, inc_len=2, total_len=57, elapsed=5.15s
+[stream_chat] chunk=35, inc_len=2, total_len=59, elapsed=5.15s
+[stream_chat] chunk=36, inc_len=1, total_len=60, elapsed=5.15s
+[stream_chat] chunk=37, inc_len=1, total_len=61, elapsed=5.15s
+[stream_chat] chunk=38, inc_len=2, total_len=63, elapsed=5.15s
+[stream_chat] chunk=39, inc_len=2, total_len=65, elapsed=5.15s
+[stream_chat] chunk=40, inc_len=1, total_len=66, elapsed=5.16s
+[stream_chat] chunk=41, inc_len=2, total_len=68, elapsed=5.16s
+[stream_chat] chunk=42, inc_len=1, total_len=69, elapsed=5.16s
+[stream_chat] chunk=43, inc_len=2, total_len=71, elapsed=5.16s
+[stream_chat] chunk=44, inc_len=1, total_len=72, elapsed=5.16s
+[stream_chat] chunk=45, inc_len=1, total_len=73, elapsed=5.16s
+[stream_chat] chunk=46, inc_len=2, total_len=75, elapsed=5.17s
+[stream_chat] chunk=47, inc_len=1, total_len=76, elapsed=5.17s
+[stream_chat] chunk=48, inc_len=1, total_len=77, elapsed=5.17s
+[stream_chat] chunk=49, inc_len=2, total_len=79, elapsed=5.18s
+[stream_chat] chunk=50, inc_len=1, total_len=80, elapsed=5.18s
+[stream_chat] chunk=51, inc_len=1, total_len=81, elapsed=5.18s
+[stream_chat] chunk=52, inc_len=1, total_len=82, elapsed=5.18s
+[stream_chat] chunk=53, inc_len=1, total_len=83, elapsed=5.18s
+[stream_chat] chunk=54, inc_len=1, total_len=84, elapsed=5.18s
+[stream_chat] chunk=55, inc_len=1, total_len=85, elapsed=5.18s
+[stream_chat] chunk=56, inc_len=2, total_len=87, elapsed=5.18s
+[stream_chat] chunk=57, inc_len=1, total_len=88, elapsed=5.18s
+[stream_chat] chunk=58, inc_len=2, total_len=90, elapsed=5.19s
+[stream_chat] chunk=59, inc_len=2, total_len=92, elapsed=5.20s
+[stream_chat] chunk=60, inc_len=1, total_len=93, elapsed=5.20s
+[stream_chat] chunk=61, inc_len=1, total_len=94, elapsed=5.20s
+[stream_chat] chunk=62, inc_len=1, total_len=95, elapsed=5.20s
+[stream_chat] chunk=63, inc_len=1, total_len=96, elapsed=5.20s
+[stream_chat] chunk=64, inc_len=1, total_len=97, elapsed=5.20s
+[stream_chat] chunk=65, inc_len=1, total_len=98, elapsed=5.20s
+[stream_chat] chunk=66, inc_len=1, total_len=99, elapsed=5.20s
+[stream_chat] chunk=67, inc_len=2, total_len=101, elapsed=5.21s
+[stream_chat] chunk=68, inc_len=4, total_len=105, elapsed=5.21s
+[stream_chat] chunk=69, inc_len=2, total_len=107, elapsed=5.21s
+[stream_chat] chunk=70, inc_len=1, total_len=108, elapsed=5.21s
+[stream_chat] chunk=71, inc_len=12, total_len=120, elapsed=5.21s
+[stream_chat] chunk=72, inc_len=3, total_len=123, elapsed=5.30s
+[stream_chat] chunk=73, inc_len=1, total_len=124, elapsed=5.30s
+[stream_chat] chunk=74, inc_len=1, total_len=125, elapsed=5.31s
+[stream_chat] chunk=75, inc_len=1, total_len=126, elapsed=5.31s
+[stream_chat] chunk=76, inc_len=1, total_len=127, elapsed=5.31s
+[stream_chat] chunk=77, inc_len=1, total_len=128, elapsed=5.38s
+[stream_chat] chunk=78, inc_len=1, total_len=129, elapsed=5.38s
+[stream_chat] chunk=79, inc_len=1, total_len=130, elapsed=5.39s
+[stream_chat] chunk=80, inc_len=1, total_len=131, elapsed=5.39s
+[stream_chat] chunk=81, inc_len=2, total_len=133, elapsed=5.39s
+[stream_chat] chunk=82, inc_len=3, total_len=136, elapsed=5.39s
+[stream_chat] chunk=83, inc_len=2, total_len=138, elapsed=5.39s
+[stream_chat] chunk=84, inc_len=1, total_len=139, elapsed=5.39s
+[stream_chat] chunk=85, inc_len=1, total_len=140, elapsed=5.39s
+[stream_chat] chunk=86, inc_len=1, total_len=141, elapsed=5.40s
+[stream_chat] chunk=87, inc_len=2, total_len=143, elapsed=5.40s
+[stream_chat] chunk=88, inc_len=2, total_len=145, elapsed=5.40s
+[stream_chat] chunk=89, inc_len=2, total_len=147, elapsed=5.40s
+[stream_chat] chunk=90, inc_len=2, total_len=149, elapsed=5.40s
+[stream_chat] chunk=91, inc_len=2, total_len=151, elapsed=5.40s
+[stream_chat] chunk=92, inc_len=2, total_len=153, elapsed=5.40s
+[stream_chat] chunk=93, inc_len=3, total_len=156, elapsed=5.40s
+[stream_chat] chunk=94, inc_len=1, total_len=157, elapsed=5.40s
+[stream_chat] chunk=95, inc_len=2, total_len=159, elapsed=5.40s
+[stream_chat] chunk=96, inc_len=2, total_len=161, elapsed=5.41s
+[stream_chat] chunk=97, inc_len=1, total_len=162, elapsed=5.41s
+[stream_chat] chunk=98, inc_len=2, total_len=164, elapsed=5.41s
+[stream_chat] chunk=99, inc_len=2, total_len=166, elapsed=5.41s
+[stream_chat] chunk=100, inc_len=2, total_len=168, elapsed=5.41s
+[stream_chat] chunk=101, inc_len=3, total_len=171, elapsed=5.41s
+[stream_chat] chunk=102, inc_len=1, total_len=172, elapsed=5.41s
+[stream_chat] chunk=103, inc_len=1, total_len=173, elapsed=5.41s
+[stream_chat] chunk=104, inc_len=1, total_len=174, elapsed=5.41s
+[stream_chat] chunk=105, inc_len=2, total_len=176, elapsed=5.41s
+[stream_chat] chunk=106, inc_len=2, total_len=178, elapsed=5.41s
+[stream_chat] chunk=107, inc_len=2, total_len=180, elapsed=5.41s
+[stream_chat] chunk=108, inc_len=1, total_len=181, elapsed=5.42s
+[stream_chat] chunk=109, inc_len=1, total_len=182, elapsed=5.42s
+[stream_chat] chunk=110, inc_len=1, total_len=183, elapsed=5.42s
+{"event": "assistant_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "看起来刚才的回复遇到了服务器端错误。就这次对话而言，我的基础是 OpenAI 的 GPT-4。\n\n关于你看到的错误信息：该错误提示在使用此模型时不支持温度参数设为 0.7，只能使用默认值 1。若你在调用 API，请把 temperature 设置为 1，或省略该参数。\n\n如果你愿意，我可以继续回答关于模型的问题，或者帮助你解决其他方面的问题。你想了解哪些具体细节？"}
+{"event": "round_end", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "tokens": 183}
+[stream_chat] finished, total_len=183, elapsed=5.42s
+{"event": "round_start", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "model": "gpt-5-nano-2025-08-07", "temperature": 1.0, "max_tokens": null, "system_prompt": "You are a helpful assistant.", "history_turns": 7}
+{"event": "user_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": ""}
+LLM change model to gpt-5-nano-2025-08-07
+LLM change temperature to 1.0
+[stream_chat] chunk=1, inc_len=1, total_len=1, elapsed=4.01s
+[stream_chat] chunk=2, inc_len=2, total_len=3, elapsed=4.01s
+[stream_chat] chunk=3, inc_len=1, total_len=4, elapsed=4.02s
+[stream_chat] chunk=4, inc_len=2, total_len=6, elapsed=4.02s
+[stream_chat] chunk=5, inc_len=2, total_len=8, elapsed=4.02s
+[stream_chat] chunk=6, inc_len=2, total_len=10, elapsed=4.02s
+[stream_chat] chunk=7, inc_len=1, total_len=11, elapsed=4.03s
+[stream_chat] chunk=8, inc_len=2, total_len=13, elapsed=4.03s
+[stream_chat] chunk=9, inc_len=1, total_len=14, elapsed=4.22s
+[stream_chat] chunk=10, inc_len=2, total_len=16, elapsed=4.23s
+[stream_chat] chunk=11, inc_len=2, total_len=18, elapsed=4.23s
+[stream_chat] chunk=12, inc_len=1, total_len=19, elapsed=4.23s
+[stream_chat] chunk=13, inc_len=1, total_len=20, elapsed=4.23s
+[stream_chat] chunk=14, inc_len=1, total_len=21, elapsed=4.24s
+[stream_chat] chunk=15, inc_len=1, total_len=22, elapsed=4.24s
+[stream_chat] chunk=16, inc_len=1, total_len=23, elapsed=4.24s
+[stream_chat] chunk=17, inc_len=5, total_len=28, elapsed=4.24s
+[stream_chat] chunk=18, inc_len=2, total_len=30, elapsed=4.24s
+[stream_chat] chunk=19, inc_len=2, total_len=32, elapsed=4.24s
+[stream_chat] chunk=20, inc_len=4, total_len=36, elapsed=4.25s
+[stream_chat] chunk=21, inc_len=1, total_len=37, elapsed=4.25s
+[stream_chat] chunk=22, inc_len=1, total_len=38, elapsed=4.25s
+[stream_chat] chunk=23, inc_len=2, total_len=40, elapsed=4.25s
+[stream_chat] chunk=24, inc_len=1, total_len=41, elapsed=4.25s
+[stream_chat] chunk=25, inc_len=3, total_len=44, elapsed=4.25s
+[stream_chat] chunk=26, inc_len=2, total_len=46, elapsed=4.25s
+[stream_chat] chunk=27, inc_len=1, total_len=47, elapsed=4.25s
+[stream_chat] chunk=28, inc_len=1, total_len=48, elapsed=4.25s
+[stream_chat] chunk=29, inc_len=1, total_len=49, elapsed=4.25s
+[stream_chat] chunk=30, inc_len=2, total_len=51, elapsed=4.26s
+[stream_chat] chunk=31, inc_len=1, total_len=52, elapsed=4.26s
+[stream_chat] chunk=32, inc_len=2, total_len=54, elapsed=4.26s
+[stream_chat] chunk=33, inc_len=2, total_len=56, elapsed=4.27s
+[stream_chat] chunk=34, inc_len=1, total_len=57, elapsed=4.27s
+[stream_chat] chunk=35, inc_len=1, total_len=58, elapsed=4.27s
+[stream_chat] chunk=36, inc_len=1, total_len=59, elapsed=4.27s
+[stream_chat] chunk=37, inc_len=1, total_len=60, elapsed=4.27s
+[stream_chat] chunk=38, inc_len=1, total_len=61, elapsed=4.27s
+[stream_chat] chunk=39, inc_len=1, total_len=62, elapsed=4.27s
+[stream_chat] chunk=40, inc_len=2, total_len=64, elapsed=4.27s
+[stream_chat] chunk=41, inc_len=1, total_len=65, elapsed=4.27s
+[stream_chat] chunk=42, inc_len=3, total_len=68, elapsed=4.28s
+[stream_chat] chunk=43, inc_len=2, total_len=70, elapsed=4.28s
+[stream_chat] chunk=44, inc_len=1, total_len=71, elapsed=4.28s
+[stream_chat] chunk=45, inc_len=1, total_len=72, elapsed=4.28s
+[stream_chat] chunk=46, inc_len=2, total_len=74, elapsed=4.28s
+[stream_chat] chunk=47, inc_len=1, total_len=75, elapsed=4.28s
+[stream_chat] chunk=48, inc_len=2, total_len=77, elapsed=4.28s
+[stream_chat] chunk=49, inc_len=1, total_len=78, elapsed=4.28s
+[stream_chat] chunk=50, inc_len=2, total_len=80, elapsed=4.28s
+[stream_chat] chunk=51, inc_len=3, total_len=83, elapsed=4.29s
+[stream_chat] chunk=52, inc_len=2, total_len=85, elapsed=4.29s
+[stream_chat] chunk=53, inc_len=2, total_len=87, elapsed=4.30s
+[stream_chat] chunk=54, inc_len=1, total_len=88, elapsed=4.30s
+[stream_chat] chunk=55, inc_len=3, total_len=91, elapsed=4.30s
+[stream_chat] chunk=56, inc_len=2, total_len=93, elapsed=4.30s
+[stream_chat] chunk=57, inc_len=1, total_len=94, elapsed=4.30s
+[stream_chat] chunk=58, inc_len=2, total_len=96, elapsed=4.30s
+[stream_chat] chunk=59, inc_len=1, total_len=97, elapsed=4.30s
+[stream_chat] chunk=60, inc_len=1, total_len=98, elapsed=4.31s
+[stream_chat] chunk=61, inc_len=2, total_len=100, elapsed=4.31s
+[stream_chat] chunk=62, inc_len=1, total_len=101, elapsed=4.31s
+[stream_chat] chunk=63, inc_len=1, total_len=102, elapsed=4.31s
+[stream_chat] chunk=64, inc_len=1, total_len=103, elapsed=4.31s
+[stream_chat] chunk=65, inc_len=1, total_len=104, elapsed=4.31s
+[stream_chat] chunk=66, inc_len=1, total_len=105, elapsed=4.31s
+[stream_chat] chunk=67, inc_len=4, total_len=109, elapsed=4.31s
+[stream_chat] chunk=68, inc_len=3, total_len=112, elapsed=4.32s
+[stream_chat] chunk=69, inc_len=1, total_len=113, elapsed=4.32s
+[stream_chat] chunk=70, inc_len=2, total_len=115, elapsed=4.32s
+[stream_chat] chunk=71, inc_len=1, total_len=116, elapsed=4.33s
+[stream_chat] chunk=72, inc_len=1, total_len=117, elapsed=4.44s
+[stream_chat] chunk=73, inc_len=12, total_len=129, elapsed=4.44s
+[stream_chat] chunk=74, inc_len=1, total_len=130, elapsed=4.45s
+[stream_chat] chunk=75, inc_len=3, total_len=133, elapsed=4.45s
+[stream_chat] chunk=76, inc_len=7, total_len=140, elapsed=4.45s
+[stream_chat] chunk=77, inc_len=2, total_len=142, elapsed=4.45s
+[stream_chat] chunk=78, inc_len=2, total_len=144, elapsed=4.45s
+[stream_chat] chunk=79, inc_len=1, total_len=145, elapsed=4.45s
+[stream_chat] chunk=80, inc_len=4, total_len=149, elapsed=4.45s
+[stream_chat] chunk=81, inc_len=1, total_len=150, elapsed=4.46s
+[stream_chat] chunk=82, inc_len=1, total_len=151, elapsed=4.46s
+[stream_chat] chunk=83, inc_len=2, total_len=153, elapsed=4.46s
+[stream_chat] chunk=84, inc_len=2, total_len=155, elapsed=4.46s
+[stream_chat] chunk=85, inc_len=2, total_len=157, elapsed=4.46s
+[stream_chat] chunk=86, inc_len=1, total_len=158, elapsed=4.46s
+[stream_chat] chunk=87, inc_len=3, total_len=161, elapsed=4.47s
+[stream_chat] chunk=88, inc_len=1, total_len=162, elapsed=4.47s
+[stream_chat] chunk=89, inc_len=1, total_len=163, elapsed=4.47s
+[stream_chat] chunk=90, inc_len=1, total_len=164, elapsed=4.47s
+[stream_chat] chunk=91, inc_len=1, total_len=165, elapsed=4.47s
+[stream_chat] chunk=92, inc_len=2, total_len=167, elapsed=4.48s
+[stream_chat] chunk=93, inc_len=1, total_len=168, elapsed=4.48s
+[stream_chat] chunk=94, inc_len=1, total_len=169, elapsed=4.48s
+[stream_chat] chunk=95, inc_len=1, total_len=170, elapsed=4.48s
+[stream_chat] chunk=96, inc_len=1, total_len=171, elapsed=4.48s
+[stream_chat] chunk=97, inc_len=3, total_len=174, elapsed=4.48s
+[stream_chat] chunk=98, inc_len=1, total_len=175, elapsed=4.48s
+[stream_chat] chunk=99, inc_len=1, total_len=176, elapsed=4.48s
+[stream_chat] chunk=100, inc_len=1, total_len=177, elapsed=4.48s
+[stream_chat] chunk=101, inc_len=2, total_len=179, elapsed=4.49s
+[stream_chat] chunk=102, inc_len=1, total_len=180, elapsed=4.49s
+[stream_chat] chunk=103, inc_len=1, total_len=181, elapsed=4.49s
+[stream_chat] chunk=104, inc_len=2, total_len=183, elapsed=4.49s
+[stream_chat] chunk=105, inc_len=1, total_len=184, elapsed=4.49s
+[stream_chat] chunk=106, inc_len=2, total_len=186, elapsed=4.49s
+[stream_chat] chunk=107, inc_len=1, total_len=187, elapsed=4.50s
+[stream_chat] chunk=108, inc_len=2, total_len=189, elapsed=4.50s
+[stream_chat] chunk=109, inc_len=2, total_len=191, elapsed=4.50s
+[stream_chat] chunk=110, inc_len=2, total_len=193, elapsed=4.51s
+[stream_chat] chunk=111, inc_len=1, total_len=194, elapsed=4.51s
+[stream_chat] chunk=112, inc_len=1, total_len=195, elapsed=4.51s
+[stream_chat] chunk=113, inc_len=1, total_len=196, elapsed=4.51s
+[stream_chat] chunk=114, inc_len=2, total_len=198, elapsed=4.51s
+[stream_chat] chunk=115, inc_len=1, total_len=199, elapsed=4.51s
+[stream_chat] chunk=116, inc_len=2, total_len=201, elapsed=4.51s
+[stream_chat] chunk=117, inc_len=2, total_len=203, elapsed=4.51s
+[stream_chat] chunk=118, inc_len=2, total_len=205, elapsed=4.51s
+[stream_chat] chunk=119, inc_len=1, total_len=206, elapsed=4.52s
+[stream_chat] chunk=120, inc_len=1, total_len=207, elapsed=4.52s
+[stream_chat] chunk=121, inc_len=1, total_len=208, elapsed=4.52s
+[stream_chat] chunk=122, inc_len=1, total_len=209, elapsed=4.52s
+[stream_chat] chunk=123, inc_len=2, total_len=211, elapsed=4.52s
+[stream_chat] chunk=124, inc_len=2, total_len=213, elapsed=4.52s
+[stream_chat] chunk=125, inc_len=1, total_len=214, elapsed=4.52s
+[stream_chat] chunk=126, inc_len=1, total_len=215, elapsed=4.52s
+[stream_chat] chunk=127, inc_len=2, total_len=217, elapsed=4.53s
+[stream_chat] chunk=128, inc_len=2, total_len=219, elapsed=4.53s
+[stream_chat] chunk=129, inc_len=1, total_len=220, elapsed=4.53s
+[stream_chat] chunk=130, inc_len=1, total_len=221, elapsed=4.53s
+[stream_chat] chunk=131, inc_len=1, total_len=222, elapsed=4.53s
+[stream_chat] chunk=132, inc_len=2, total_len=224, elapsed=4.66s
+[stream_chat] chunk=133, inc_len=1, total_len=225, elapsed=4.66s
+[stream_chat] chunk=134, inc_len=1, total_len=226, elapsed=4.66s
+[stream_chat] chunk=135, inc_len=2, total_len=228, elapsed=4.67s
+[stream_chat] chunk=136, inc_len=1, total_len=229, elapsed=4.67s
+{"event": "assistant_message", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "text": "看起来你没有输入问题。需要我继续说明吗？我基于 OpenAI 的 GPT-4 模型，可以帮助你解答问题、整理信息、写作、编程辅助等。\n\n如果你有具体想了解的内容，可以直接告诉我，例如：\n- 模型的能力与局限\n- API 参数的意义（如 temperature、max_tokens 等）\n- GPT-4 与其他版本（GPT-3.5）的差异\n- 数据隐私与安全\n- 给定任务的最佳使用方式或示例\n\n也可以直接告诉我你想做什么，我给出具体帮助。你想了解哪一部分？"}
+{"event": "round_end", "session_id": "46e2745b-657a-48df-bbd1-accaf565f659", "tokens": 229}
+[stream_chat] finished, total_len=229, elapsed=4.74s

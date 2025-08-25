@@ -65,54 +65,95 @@ logger.add(
 # ------------------------------
 logger.debug(f"Global factor weights (G): {json.dumps(G, ensure_ascii=False, indent=2)}")
 
-class QwenBailianClient:
+class llmClient:
     """OpenAI 兼容调用百炼 Qwen3-8B"""
-    def __init__(self, model: str = "qwen3-8b",
+    def __init__(self, model: str = "gpt-4o-mini",
                  api_key: Optional[str] = None,
                  base_url: Optional[str] = None,
                  temperature: float = 0.2,
                  timeout: int = 60):
         self.model = model
         self.temperature = temperature
-        api_key = api_key or os.getenv("DASHSCOPE_API_KEY")
-        base_url = base_url or os.getenv("DASHSCOPE_BASE_URL") \
+        api_key = api_key or os.getenv("OPENAI_API_KEY")
+        base_url = base_url or os.getenv("OPENAI_BASE_URL") \
                    or "https://dashscope.aliyuncs.com/compatible-mode/v1"
         if not api_key:
             raise RuntimeError("DASHSCOPE_API_KEY is missing.")
         self.client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
         logger.info(f"QwenBailianClient init: model={model}, base_url={base_url}, temperature={temperature}")
 
-    def chat_once(self, user: str) -> str:
+    def chat_stream(self,
+                    messages: list,
+                    temperature: Optional[float] = None,
+                    max_tokens: Optional[int] = None,
+                    enable_thinking: bool = False):
+        """流式生成：yield 文本增量"""
+        t0 = time.time()
+        stream = self.client.chat.completions.create(
+            model=self.model,
+            temperature=self.temperature if temperature is None else float(temperature),
+            max_tokens=max_tokens if (max_tokens and max_tokens > 0) else None,
+            messages=messages,
+            stream=True,
+            # extra_body={"enable_thinking": enable_thinking},
+        )
+        total = ""
+        for chunk in stream:
+            # 兼容某些实现末尾会给空 choices 的情况
+            if not getattr(chunk, "choices", None):
+                continue
+            choice = chunk.choices[0]
+            # 某些实现会在流中就带 finish_reason
+            if getattr(choice, "finish_reason", None):
+                break
+            delta = getattr(choice, "delta", None)
+            if delta and getattr(delta, "content", None):
+                total += delta.content
+                yield delta.content  # 返回增量
+        dt = (time.time() - t0) * 1000
+        logger.debug(f"[Qwen stream] latency={dt:.1f}ms, resp_len={len(total)}")
+
+    def chat_once(self, messages: list,
+                       temperature: Optional[float] = None,
+                       max_tokens: Optional[int] = None,
+                       enable_thinking: bool = False) -> str:
+        """非流式一次性返回全文（兜底）"""
         t0 = time.time()
         resp = self.client.chat.completions.create(
             model=self.model,
-            temperature=self.temperature,
-            messages=[{"role":"user","content":user}],
-            extra_body={"enable_thinking": False},
+            temperature=self.temperature if temperature is None else float(temperature),
+            max_tokens=max_tokens if (max_tokens and max_tokens > 0) else None,
+            messages=messages,
+            # extra_body={"enable_thinking": enable_thinking},
         )
         dt = (time.time() - t0) * 1000
         text = resp.choices[0].message.content or ""
-        logger.debug(f"LLM latency={dt:.1f}ms, tokens≈{getattr(resp.usage,'total_tokens',None)}, "
-                     f"resp_len={len(text)}")
-        logger.debug(f"LLM response: " + (text[:400].replace('\n', ' ')) + ("..." if len(text) > 400 else ""))
+        logger.debug(f"[Qwen once] latency={dt:.1f}ms, tokens≈{getattr(resp.usage,'total_tokens',None)}, resp_len={len(text)}")
         return text
+    
+    def change_model(self, model: str):
+        self.model = model
+        logger.info(f"LLM change model to {model}")
+    
+    def change_temperature(self, temperature: float):
+        self.temperature = temperature
+        logger.info(f"LLM change temperature to {temperature}")
 
 # ------------------------------
 # 打分器（含重试与日志）
 # ------------------------------
 class HeuristicMotivePredictor:
     """
-    拼 Prompt → 调 LLM（重试/退避）→ 解析 JSON → 10 因子聚合 → 
-    
-    llm: QwenBailianClient 实例
-    beta: 放大系数，防止过弱的因子影响
-    use_global_factor_weight: 是否使用全局因子权重 G
-    max_retries: 最大重试次数
-    retry_delay: 初始重试延迟（秒）
-    backoff: 重试指数退避系数
-    jitter: 抖动范围（0~1），防止重试同步
+    只做“上下文序列打分”的纯打分器：
+      context_turns -> 构造 Prompt -> 调 LLM（带重试/退避）-> 解析严格 JSON -> 聚合十因子 -> 返回每维最终分
+
+    参数：
+      llm:        llmClient 实例（需提供 .chat_once(messages|prompt_str) 接口或兼容）
+      beta:       放大系数，抑制过弱贡献（最终幅度 |m|<=1）
+      use_global_factor_weight: 是否使用全局因子权重 G
+      max_retries / retry_delay / backoff / jitter: 重试控制
     """
-    def __init__(self, llm: QwenBailianClient, beta: float = 1.3,
+    def __init__(self, llm: llmClient, beta: float = 1.3,
                  use_global_factor_weight: bool = True,
                  max_retries: int = 3, retry_delay: float = 1.2,
                  backoff: float = 2.0, jitter: float = 0.25):
@@ -124,20 +165,18 @@ class HeuristicMotivePredictor:
         self.backoff = backoff
         self.jitter = jitter
 
-    # -------- Prompt -------
-
+    # -------- Prompt 构造（仅基于上下文序列 + P_t/P0/meta） -------
     @staticmethod
-    def _build_user_prompt(context_turns: List[str], P_t: Dict[str,float],
-                           P0: Optional[Dict[str,float]] = None,
-                           meta: Optional[Dict] = None) -> str:
+    def _build_user_prompt(context_turns: List[str], P_t: Dict[str, float],
+                           P0: Optional[Dict[str, float]] = None,
+                           meta: Optional[Dict[str, Any]] = None) -> str:
         ctx = "\n".join(context_turns)
         schema = json.dumps(STRICT_SCHEMA_MIN, ensure_ascii=False, indent=2)
         return f"""
 You are a careful analyst that scores conversational factors impacting persona expression (OCEAN) of an ASSISTANT based on the conversation context and current persona state.
-You will be given a conversation context between ASSISTANT and USER and the persona of current ASSISTANT. Please analyze the context from the perspective of the ASSISTANT.
-Your task is to analyze the following conversation context and current persona state of the USER, then score 10 named factors that the ASSISTANT would consider important for responding in the current turn.
-Also produce per-trait salience in [0,1], which means how much each dimension of traits ASSISTANT should expressed in future dialogue turn, and give your reason about this value. 
-[Context Order]: oldest-first
+You will be given a conversation context (chronological, oldest first) and the current persona state P_t (and optionally a baseline P0).
+Your job is to extract EVIDENCE for each factor, decide DIRECTION (dir ∈ {{-1,0,1}}) and STRENGTH (str ∈ [0,1]) for only the traits mentioned in the Priors, then estimate per-trait salience ({{val, explain}}).
+
 [Turns]:
 {ctx}
 
@@ -150,50 +189,93 @@ Also produce per-trait salience in [0,1], which means how much each dimension of
 {"[Task Meta]:" if meta is not None else ""}
 {json.dumps(meta if meta is not None else None, ensure_ascii=False)}
 
-[Ten Factors to Score]:
-1) motivation       2) topic_type     3) semantic_fit     4) internal_state
-5) expected_impact  6) feedback       7) fluency          8) urgency
-9) contextual_setting  10) relationship
+[Decision rules for direction/sign]
+- dir = +1  → the factor tends to AMPLIFY/encourage expression of the trait given the evidence.
+- dir = -1  → the factor tends to SUPPRESS/attenuate expression of the trait given the evidence (prefer this over +1 when the majority of signals point to inhibition, constraint, fatigue, conflict, or avoidance).
+- dir = 0   → insufficient or mixed evidence; or the trait is not mentioned for this factor.
+- Strength mapping guideline (not a hard rule): strong evidence → str≈0.7–1.0, moderate → 0.4–0.7, weak → 0.1–0.4; put str=0 if dir=0.
+- Confidence 'conf' reflects evidence reliability/clarity (0–1). Penalize conf when evidence is indirect or contradictory.
+- If evidence is neutral or mixed, choose dir=0.
 
-[Priors]:
-- motivation: C↑ seek recognition/avoid errors; A↓ when face-saving
-- topic_type: O/E↑ creative/playful; E↓ dull/formal
-- semantic_fit: E↑ resonates with own experience; O↓ distant/uninterested
-- internal_state: N↑ anxious/vulnerable; C↓ tired/overloaded
-- expected_impact: A↑ trust/support; C↑ productive steer
-- feedback: N↑ anger/criticism; A↑ kindness
-- fluency: E↑ energetic rhythm; C↓ chaotic/hesitant
-- urgency: C↑ deadline pressure; A↓ mistakes/misunderstanding
-- contextual_setting: A↑ group harmony; E↓ formal/unknown
-- relationship: E↑ with familiar; N↑ when safe to disclose vulnerability
+[Priors: up/down regulators per factor]
+- motivation  (C, A, E, N):
+  • C↑ when seeking recognition/avoiding errors; C↓ with complacency, lack of stakes, fuzzy goals, chaotic priorities.
+  • A↓ with face-saving/defensiveness/territorial behavior; A↑ with prosocial duty or cooperative goals.
+  • E↑ with public visibility/social reward; E↓ with low visibility/solo, shame/withdrawal cues.
+  • N↑ with fear of failure/rumination; N↓ with reassurance/clear safety net.
 
-[Output STRICT JSON Schema]:
+- topic_type  (O, E):
+  • O/E↑ with creative/playful/novel tasks; 
+  • E↓ with dull/formal/rote tasks; O↓ with rigid SOP/anti-novelty/bureaucratic grind.
+
+- semantic_fit  (E, O, C):
+  • E↑ when content resonates with own experience/self-disclosure; E↓ when impersonal/3rd-person/alienating.
+  • O↑ for open-ended/ambiguous/idea-heavy material; O↓ for purely mechanical, highly constrained specs.
+  • C↑ when material is structured and rule-bound; C↓ when it’s inconsistent/contradictory/noisy.
+
+- internal_state  (N, C, E):
+  • N↑ with anxiety/vulnerability/overwhelm; N↓ with calm/regulated/grounded states.
+  • C↓ with tiredness/overload/cognitive depletion; C↑ with rested/alert/energetic states.
+  • E↓ with social fatigue/withdrawal; E↑ with energized/engaged mood.
+
+- expected_impact  (A, C, N):
+  • A↑ with trust/support/prosocial payoff; A↓ with threat/blame/zero-sum framing.
+  • C↑ with productive leverage/clear efficacy; C↓ with low control/pointless busywork.
+  • N↑ when outcomes feel risky/irreversible; N↓ when safety margins and reversibility are explicit.
+
+- feedback  (N, A, E, C):
+  • N↑ with harsh criticism/anger/hostility; N↓ with validation/reassurance/specific guidance.
+  • A↑ with kindness/benefit-of-doubt; A↓ with sarcasm/contempt/stonewalling.
+  • E↓ with shaming/humiliation; E↑ with encouraging tone.
+  • C↑ with actionable checklists; C↓ with vague/conflicting asks.
+
+- fluency  (E, C):
+  • E↑ with energetic rhythm/back-and-forth momentum; E↓ with monotone/withdrawn/fragmented flow.
+  • C↓ with chaotic/hesitant/derailed flow; C↑ with structured cadence and turn-taking norms.
+
+- urgency  (C, A, N):
+  • C↑ with real deadlines/clear stakes; C↓ with false alarms/learned helplessness/priority thrash.
+  • A↓ with time-pressure misunderstandings leading to blame; A↑ when alignment reduces friction.
+  • N↑ with time scarcity + uncertainty; N↓ with buffered timelines and contingency plans.
+
+- contextual_setting  (A, E, N):
+  • A↑ with group harmony/psychological safety; A↓ with overt conflict/competitive frames.
+  • E↓ with formal/unknown/large-audience settings; E↑ with familiar, small, informal settings.
+  • N↑ with scrutiny/high stakes; N↓ with low-stakes practice or backstage coordination.
+
+- relationship  (E, N, A):
+  • E↑ with familiar teammates/rapport; E↓ with strangers/hostile ties.
+  • N↑ when the space is safe to disclose vulnerability; N↓ when boundaries are respected and support norms are clear.
+  • A↑ with trust history/reciprocity; A↓ with breaches, perceived exploitation, or status threats.
+
+[Output STRICT JSON Schema]
 {schema}
 
-[Note]:
-- For each factor, only adjust dimensions mentioned in Priors; keep others at dir=0,str=0,conf=0
-- Fill 'explain' briefly and 'evidence' with snippets..
-- Salience: provide {{val, explain}} per trait.
+[Notes]
+- For each factor, only adjust the traits listed above; keep others at dir=0,str=0,conf=0.
+- Provide a brief 'explain' and include short 'evidence' snippets quoted/paraphrased from the context.
 - Output STRICT JSON ONLY. No extra text.
 """.strip()
 
-    # -------- 调用与重试 --------
-    def _chat_with_retries(self, user: str) -> str:
+
+    # -------- LLM 调用（带重试/退避 + 进度日志） --------
+    def _chat_with_retries(self, user_prompt: str) -> str:
         delay = self.retry_delay
         last_exc = None
         for attempt in range(1, self.max_retries + 1):
             try:
-                logger.info(f"LLM request attempt {attempt}/{self.max_retries}")
-                text = self.llm.chat_once(user)
-                # 简单健壮性检查
+                logger.info(f"[predictor] LLM attempt {attempt}/{self.max_retries}, prompt_len={len(user_prompt)}")
+                t0 = time.time()
+                text = self.llm.chat_once(messages=[{"role": "user", "content": user_prompt}])
+                dt = (time.time() - t0) * 1000
+                logger.info(f"[predictor] LLM ok in {dt:.1f}ms, resp_head={(text[:120].replace(chr(10),' '))!r}")
+                # 解析校验（若不符合预期会抛 ValueError 触发重试）
                 self._extract_json(text)
                 return text
             except Exception as e:
                 last_exc = e
-                snippet = ""
-                if isinstance(e, ValueError):
-                    snippet = f" | reason={e}"
-                logger.warning(f"Attempt {attempt} failed{snippet}")
+                reason = f" | reason={e}" if isinstance(e, ValueError) else ""
+                logger.warning(f"[predictor] attempt {attempt} failed{reason}")
                 logger.debug(traceback.format_exc())
                 if attempt == self.max_retries:
                     break
@@ -201,134 +283,113 @@ Also produce per-trait salience in [0,1], which means how much each dimension of
                 sleep_s = delay * (self.backoff ** (attempt - 1))
                 sleep_s *= (1.0 + random.uniform(-self.jitter, self.jitter))
                 sleep_s = max(0.2, sleep_s)
-                logger.info(f"Retrying in {sleep_s:.2f}s ...")
+                logger.info(f"[predictor] retrying in {sleep_s:.2f}s ...")
                 time.sleep(sleep_s)
-        raise RuntimeError(f"Qwen3 scoring failed after retries: {last_exc}")
+        raise RuntimeError(f"Scoring failed after retries: {last_exc}")
 
-    # -------- 解析与聚合 --------
+    # -------- 解析严格 JSON --------
     def _extract_json(self, text: str) -> dict:
+        # 抓第一段 JSON（允许模型偶尔加提示词/解释）
         m = re.search(r"\{.*\}", text, flags=re.S)
         if not m:
             raise ValueError("No JSON object found in model output.")
         obj = json.loads(m.group(0))
         if not isinstance(obj, dict):
             raise ValueError("Extracted JSON is not an object.")
-        for m in MENTIONS.values():
-            for k in DIMENSIONS:
-                if k not in obj.get("salience", {}):
-                    raise ValueError(f"Salience missing dimension '{k}'.")
-                if not isinstance(obj["salience"][k], dict):
-                    raise ValueError(f"Salience for '{k}' is not a dict.")
+
+        # 基本字段检查
+        if "factors" not in obj or "salience" not in obj:
+            raise ValueError("JSON must contain 'factors' and 'salience'.")
+
+        # salience 结构容错：允许 {val, explain} 或标量
+        sal = obj["salience"]
+        if not isinstance(sal, dict):
+            raise ValueError("'salience' must be an object.")
+        for d in DIMENSIONS:
+            v = sal.get(d, {"val": 0.0, "explain": ""})
+            if isinstance(v, dict):
+                if "val" not in v:
+                    raise ValueError(f"salience['{d}'] missing 'val'.")
+                try:
+                    v["val"] = float(v["val"])
+                except Exception:
+                    raise ValueError(f"salience['{d}'].val must be numeric.")
+            else:  # 标量兜底
+                try:
+                    sal[d] = {"val": float(v), "explain": ""}
+                except Exception:
+                    raise ValueError(f"salience['{d}'] must be numeric or {{val, explain}}.")
+        obj["salience"] = sal
         return obj
 
+    # -------- 聚合十因子 → 每维最终分 --------
     def _aggregate(self, raw: dict) -> dict:
-        # s = {k: 0.0 for k in DIMENSIONS}
-        # conf_bucket = {k: [] for k in DIMENSIONS}
-
-        # # 记录每个因子的有效条目数量，便于排查
-        # eff_counts = {}
-
-        # for f, payload in raw["factors"].items():
-        #     per = payload.get("per_trait", {})
-        #     gf = (G.get(f, 1.0) if self.use_g else 1.0)
-        #     cnt = 0
-        #     for k in DIMENSIONS:
-        #         if k not in per:  # 容错
-        #             continue
-        #         dir_k = int(per[k].get("dir", 0))
-        #         str_k = float(per[k].get("str", 0.0))
-        #         conf_k = float(per[k].get("conf", 0.0))
-        #         s[k] += gf * W[f][k] * dir_k * str_k
-        #         if dir_k != 0:
-        #             conf_bucket[k].append(conf_k)
-        #             cnt += 1
-        #     eff_counts[f] = cnt
-
-        # final = {}
-        # for k in DIMENSIONS:
-        #     val = s[k]
-        #     dir_k = 0 if abs(val) < 1e-6 else (1 if val > 0 else -1)
-        #     # beta 放大系数，防止过弱；不超过 1
-        #     m_k = min(abs(val) * self.beta, 1.0)
-        #     conf_k = sum(conf_bucket[k])/len(conf_bucket[k]) if conf_bucket[k] else 0.5
-        #     final[k] = {"dir": dir_k, "m": m_k, "conf": round(conf_k, 3)}
-
-        # # 打点总结
-        # logger.info("Aggregate summary: " +
-        #             ", ".join(f"{k}:dir={final[k]['dir']},m={final[k]['m']:.2f}"
-        #                       for k in DIMENSIONS))
-        # logger.debug("Per-factor effective counts: " + json.dumps(eff_counts, ensure_ascii=False))
-
-        # # 兼容你自定义的 salience 结构（val+explain）
-        # sal = raw.get("salience", {d: {"val": 0.0, "explain": ""} for d in DIMENSIONS})
-        # # 兜底：若模型不按 schema 返回简单标量
-        # for d in DIMENSIONS:
-        #     v = sal.get(d, 0.0)
-        #     if isinstance(v, dict) and "val" in v:
-        #         continue
-        #     sal[d] = {"val": float(v) if isinstance(v, (int, float)) else 0.0, "explain": ""}
-
-        # return {
-        #     "factors": raw["factors"],
-        #     "salience": sal,
-        #     "final": {"per_trait": final}
-        # }
-        logger.debug(f"Raw data for aggregation: {json.dumps(raw, ensure_ascii=False)}")
-        final = {k: 0.0 for k in DIMENSIONS}
+        logger.debug(f"[predictor] raw JSON: {json.dumps(raw, ensure_ascii=False)[:1500]}")
+        total = {k: 0.0 for k in DIMENSIONS}
         for factor in W:
+            per = raw.get("factors", {}).get(factor, {}).get("per_trait", {})
             for k in DIMENSIONS:
                 if W[factor][k] == 0:
                     continue
-                dir_k = int(raw["factors"].get(factor, {}).get("per_trait", {}).get(k, {}).get("dir", 0))
-                str_k = float(raw["factors"].get(factor, {}).get("per_trait", {}).get(k, {}).get("str", 0.0))
-                conf_k = float(raw["factors"].get(factor, {}).get("per_trait", {}).get(k, {}).get("conf", 0.0))
+                slot = per.get(k, {})
+                dir_k = int(slot.get("dir", 0))
+                str_k = float(slot.get("str", 0.0))
+                conf_k = float(slot.get("conf", 0.0))
                 gk = G[factor][k] if self.use_g else 1.0
-                final[k] += gk * W[factor][k] * dir_k * str_k * conf_k
-        for k in DIMENSIONS:
-            val = final[k]
-            dir_k = 0 if abs(val) < 1e-6 else (1 if val > 0 else -1)
-            m_k = min(abs(val) * self.beta, 1.0) * dir_k
-            final[k] = m_k
-        result = {"salience": raw.get("salience", {}), "final": final}
-        logger.info("Aggregation result: " + json.dumps(result, ensure_ascii=False, indent=2))
-        return result
-    # -------- 对外主流程 --------
-    def score(self, context_turns: List[str], P_t: Dict[str,float],
-              P0: Optional[Dict[str,float]] = None, meta: Optional[Dict] = None) -> dict:
-        usr = self._build_user_prompt(context_turns, P_t, P0, meta)
-        logger.debug(f"Prompt preview (chars): user={len(usr)}")
+                total[k] += gk * W[factor][k] * dir_k * str_k * conf_k
 
-        text = self._chat_with_retries(usr)
-        # 为了日志安全，截断显示
-        logger.debug("Raw model text head: " + text[:400].replace("\n", " ") + ("..." if len(text) > 400 else ""))
+        # 压幅 & 带符号
+        final = {}
+        for k, v in total.items():
+            if abs(v) < 1e-6:
+                final[k] = 0.0
+            else:
+                m = min(abs(v) * self.beta, 1.0)
+                final[k] = m if v > 0 else -m
 
-        raw = self._extract_json(text)
-        # 基础字段存在性检查（简化版）
-        if "factors" not in raw:
-            raise ValueError("JSON lacks 'factors' key.")
-        return self._aggregate(raw)
-
-    # —— 兼容你的 demo：返回 direction/strength/salience —— #
-    def predict_for_demo(self, utterance: str, Pt: Dict[str,float]) -> Dict[str, dict]:
-        aggregated = self.score([utterance], Pt, P0=None, meta=None)
-        sal = aggregated["salience"]
-        out = {}
-        for k in DIMENSIONS:
-            f = aggregated["final"]["per_trait"][k]
-            out[k] = {
-                "direction": int(f["dir"]),
-                "strength": float(f["m"]),
-                "salience": float(sal.get(k, {}).get("val", 0.0))
-            }
+        out = {"salience": raw.get("salience", {}), "final": final}
+        logger.info("[predictor] aggregate result: " + json.dumps(out, ensure_ascii=False, indent=2))
         return out
 
+    # -------- 对外主流程（唯一入口） --------
+    def score(self, context_turns: List[str], P_t: Dict[str, float],
+              P0: Optional[Dict[str, float]] = None, meta: Optional[Dict[str, Any]] = None) -> dict:
+        """
+        传入：对话上下文序列（list[str]，从旧到新）、当前人格 P_t（0~1），可选 P0/meta
+        返回：{
+          "salience": { O..N: {"val": float, "explain": str} },
+          "final":    { O..N: float in [-1,1] }   # 十因子聚合后的方向带幅度
+        }
+        """
+        user_prompt = self._build_user_prompt(context_turns, P_t, P0, meta)
+        logger.debug(f"[predictor] prompt_len={len(user_prompt)}")
+        text = self._chat_with_retries(user_prompt)
+        logger.debug("[predictor] raw_head: " + text[:400].replace("\n", " ") + ("..." if len(text) > 400 else ""))
+        raw = self._extract_json(text)
+        return self._aggregate(raw)
+
 if __name__ == "__main__":
-    # 初始化
-    llm = QwenBailianClient(model="qwen3-8b")  # 环境变量里配置 DASHSCOPE_API_KEY / _BASE_URL
-    predictor = HeuristicMotivePredictor(llm, max_retries=4, retry_delay=1.0, backoff=2.0, jitter=0.3)
+    # 初始化 LLM 客户端（需提前在环境里 export OPENAI_API_KEY / OPENAI_BASE_URL）
+    llm = llmClient(model="gpt-4o-mini")
+    predictor = HeuristicMotivePredictor(
+        llm,
+        max_retries=4,
+        retry_delay=1.0,
+        backoff=2.0,
+        jitter=0.3
+    )
 
-    # 评分（多轮对话可传最近若干轮，顺序与 prompt 声明一致）
-    P_t = {"O":0.55,"C":0.65,"E":0.35,"A":0.70,"N":0.40}
-    result = predictor.score(["[ASSISTANT] let's plan the week...", "[USER] ok, deadline is near..."], P_t)
+    # 当前人格向量 P_t
+    P_t = {"O": 0.55, "C": 0.65, "E": 0.35, "A": 0.70, "N": 0.40}
 
-    logger.success(f"Scored result: {json.dumps(result, ensure_ascii=False, indent=2)}")
+    # 输入上下文（对话片段，顺序 oldest-first）
+    context = [
+        "[ASSISTANT] let's plan the week...",
+        "[USER] ok, deadline is near..."
+    ]
+
+    # 调用打分
+    result = predictor.score(context, P_t)
+
+    # 打印结果
+    logger.success("最终打分结果：\n" + json.dumps(result, ensure_ascii=False, indent=2))
