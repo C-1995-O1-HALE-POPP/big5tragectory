@@ -77,6 +77,186 @@ def generate_system_prompt(base: bool = True, vals: dict[str, float] = {}) -> st
             prompt_parts.append(big5_system_prompts_en[key][round(vals[key], 1)])
     return ((SYSTEM_PROMPT + " ") if base else "") + " ".join(prompt_parts)
 
-from loguru import logger
-for i in range(0, 101):
-    logger.info(generate_system_prompt(base=True, vals = {"O": i/100}))
+
+# Factor→Trait mask (1 means this factor can influence that trait)
+# This mirrors the user's provided mapping; modify if you realign to the infographic.
+W = {
+    "motivation":         {"O":0.0,"C":1.0,"E":1.0,"A":1.0,"N":1.0},
+    "topic_type":         {"O":1.0,"C":1.0,"E":1.0,"A":1.0,"N":1.0},
+    "semantic_fit":       {"O":1.0,"C":1.0,"E":1.0,"A":1.0,"N":1.0},
+    "internal_state":     {"O":1.0,"C":1.0,"E":1.0,"A":1.0,"N":1.0},
+    "expected_impact":    {"O":0.0,"C":1.0,"E":1.0,"A":1.0,"N":0.0},
+    "feedback":           {"O":0.0,"C":1.0,"E":1.0,"A":1.0,"N":1.0},
+    "fluency":            {"O":0.0,"C":1.0,"E":1.0,"A":1.0,"N":0.0},
+    "urgency":            {"O":0.0,"C":1.0,"E":0.0,"A":1.0,"N":0.0},
+    "contextual_setting": {"O":0.0,"C":1.0,"E":1.0,"A":1.0,"N":1.0},
+    "relationship":       {"O":0.0,"C":1.0,"E":1.0,"A":1.0,"N":1.0},
+}
+
+PRIORS = {
+  "motivation": {
+    "C": {
+      "increase": ["seeking recognition", "avoiding errors"],
+      "decrease": ["complacency", "lack of stakes", "fuzzy goals", "chaotic priorities"]
+    },
+    "A": {
+      "increase": ["prosocial duty", "cooperative goals"],
+      "decrease": ["face-saving", "defensiveness", "territorial behavior"]
+    },
+    "E": {
+      "increase": ["public visibility", "social reward"],
+      "decrease": ["low visibility", "solo", "shame", "withdrawal cues"]
+    },
+    "N": {
+      "increase": ["fear of failure", "rumination"],
+      "decrease": ["reassurance", "clear safety net"]
+    }
+  },
+  "topic_type": {
+    "O": {
+      "increase": ["creative tasks", "playful tasks", "novel tasks"],
+      "decrease": ["rigid SOP", "anti-novelty", "bureaucratic grind"]
+    },
+    "E": {
+      "increase": ["creative tasks", "playful tasks", "novel tasks"],
+      "decrease": ["dull tasks", "formal tasks", "rote tasks"]
+    }
+  },
+  "semantic_fit": {
+    "E": {
+      "increase": ["content resonates with own experience", "self-disclosure"],
+      "decrease": ["impersonal", "third-person", "alienating"]
+    },
+    "O": {
+      "increase": ["open-ended material", "ambiguous material", "idea-heavy material"],
+      "decrease": ["purely mechanical", "highly constrained specs"]
+    },
+    "C": {
+      "increase": ["structured material", "rule-bound material"],
+      "decrease": ["inconsistent", "contradictory", "noisy material"]
+    }
+  },
+  "internal_state": {
+    "N": {
+      "increase": ["anxiety", "vulnerability", "overwhelm"],
+      "decrease": ["calm", "regulated states", "grounded states"]
+    },
+    "C": {
+      "increase": ["rested state", "alertness", "energetic state"],
+      "decrease": ["tiredness", "overload", "cognitive depletion"]
+    },
+    "E": {
+      "increase": ["energized mood", "engaged mood"],
+      "decrease": ["social fatigue", "withdrawal"]
+    }
+  },
+  "expected_impact": {
+    "A": {
+      "increase": ["trust", "support", "prosocial payoff"],
+      "decrease": ["threat", "blame", "zero-sum framing"]
+    },
+    "C": {
+      "increase": ["productive leverage", "clear efficacy"],
+      "decrease": ["low control", "pointless busywork"]
+    },
+    "N": {
+      "increase": ["risky outcomes", "irreversible outcomes"],
+      "decrease": ["safety margins", "reversibility"]
+    }
+  },
+  "feedback": {
+    "N": {
+      "increase": ["harsh criticism", "anger", "hostility"],
+      "decrease": ["validation", "reassurance", "specific guidance"]
+    },
+    "A": {
+      "increase": ["kindness", "benefit-of-doubt"],
+      "decrease": ["sarcasm", "contempt", "stonewalling"]
+    },
+    "E": {
+      "increase": ["encouraging tone"],
+      "decrease": ["shaming", "humiliation"]
+    },
+    "C": {
+      "increase": ["actionable checklists"],
+      "decrease": ["vague asks", "conflicting asks"]
+    }
+  },
+  "fluency": {
+    "E": {
+      "increase": ["energetic rhythm", "back-and-forth momentum"],
+      "decrease": ["monotone", "withdrawn flow", "fragmented flow"]
+    },
+    "C": {
+      "increase": ["structured cadence", "turn-taking norms"],
+      "decrease": ["chaotic flow", "hesitant flow", "derailed flow"]
+    }
+  },
+  "urgency": {
+    "C": {
+      "increase": ["real deadlines", "clear stakes"],
+      "decrease": ["false alarms", "learned helplessness", "priority thrash"]
+    },
+    "A": {
+      "increase": ["alignment reduces friction"],
+      "decrease": ["time-pressure misunderstandings", "blame"]
+    },
+    "N": {
+      "increase": ["time scarcity", "uncertainty"],
+      "decrease": ["buffered timelines", "contingency plans"]
+    }
+  },
+  "contextual_setting": {
+    "A": {
+      "increase": ["group harmony", "psychological safety"],
+      "decrease": ["overt conflict", "competitive frames"]
+    },
+    "E": {
+      "increase": ["familiar settings", "small settings", "informal settings"],
+      "decrease": ["formal settings", "unknown settings", "large-audience settings"]
+    },
+    "N": {
+      "increase": ["scrutiny", "high stakes"],
+      "decrease": ["low-stakes practice", "backstage coordination"]
+    }
+  },
+  "relationship": {
+    "E": {
+      "increase": ["familiar teammates", "rapport"],
+      "decrease": ["strangers", "hostile ties"]
+    },
+    "N": {
+      "increase": ["safe space to disclose vulnerability"],
+      "decrease": ["boundaries respected", "support norms are clear"]
+    },
+    "A": {
+      "increase": ["trust history", "reciprocity"],
+      "decrease": ["breaches of trust", "perceived exploitation", "status threats"]
+    }
+  }
+}
+
+def generate_prior_prompt(factor: str, dimensions: list[str]) -> str:
+    if factor not in PRIORS:
+        raise ValueError(f"Factor '{factor}' not recognized. Valid factors: {list(PRIORS.keys())}")
+    res = f'''{factor.capitalize().replace("_", " ")}:\n'''
+    have_any = False
+    for dim in dimensions:
+        if dim not in PRIORS[factor]:
+            continue
+        have_any = True
+        inc = PRIORS[factor][dim]["increase"]
+        dec = PRIORS[factor][dim]["decrease"]
+        res += f"   - {dim}: increases with " + ", ".join(inc) + "; decreases with " + ", ".join(dec) + ".\n"
+    return res if have_any else ""
+
+BIG5_DEFINITIONS = {
+  "O": "Openness to Experience: the tendency to be imaginative, curious, and open to new ideas or experiences.",
+  "C": "Conscientiousness: the tendency to be organized, disciplined, reliable, and goal-directed.",
+  "E": "Extraversion: the tendency to be sociable, energetic, assertive, and seek stimulation in the company of others.",
+  "A": "Agreeableness: the tendency to be compassionate, cooperative, trusting, and concerned for others.",
+  "N": "Neuroticism: the tendency to experience negative emotions such as anxiety, anger, or vulnerability more easily."
+}
+
+for i in PRIORS:
+    print(generate_prior_prompt(i, ["N"]))
