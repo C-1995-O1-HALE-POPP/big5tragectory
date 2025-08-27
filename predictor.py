@@ -33,13 +33,13 @@ MENTIONS = {
 G = {m: {k: (MENTIONS[m] if W[m][k] != 0 else 0)/ sum((MENTIONS[d] if W[d][k] != 0 else 0 for d in MENTIONS)) for k in DIMENSIONS} for m in MENTIONS} 
 STRICT_SCHEMA_MIN = {
   "factors": {
-    k: {"explain":"", "evidence":[], "per_trait":{
-      "O":{"dir":0,"str":0,"conf":0},
-      "C":{"dir":0,"str":0,"conf":0},
-      "E":{"dir":0,"str":0,"conf":0},
-      "A":{"dir":0,"str":0,"conf":0},
-      "N":{"dir":0,"str":0,"conf":0},
-    }} for k in W.keys()
+    k: {
+      "O":{"dir":0,"str":0,"conf":0,"reason":""},
+      "C":{"dir":0,"str":0,"conf":0,"reason":""},
+      "E":{"dir":0,"str":0,"conf":0,"reason":""},
+      "A":{"dir":0,"str":0,"conf":0,"reason":""},
+      "N":{"dir":0,"str":0,"conf":0,"reason":""},
+    } for k in W.keys()
   },
   "salience": {  # 你定制的带解释形式
       d : {"val":0, "explain": ""} for d in DIMENSIONS
@@ -61,12 +61,12 @@ logger.add(
 )
 
 # ------------------------------
-# 百炼 OpenAI 兼容客户端
+# OpenAI 兼容客户端
 # ------------------------------
 logger.debug(f"Global factor weights (G): {json.dumps(G, ensure_ascii=False, indent=2)}")
 
 class llmClient:
-    """OpenAI 兼容调用百炼 Qwen3-8B"""
+    """OpenAI 兼容调用 """
     def __init__(self, model: str = "gpt-4o-mini",
                  api_key: Optional[str] = None,
                  base_url: Optional[str] = None,
@@ -175,7 +175,20 @@ class HeuristicMotivePredictor:
         return f"""
 You are a careful analyst that scores conversational factors impacting persona expression (OCEAN) of an ASSISTANT based on the conversation context and current persona state.
 You will be given a conversation context (chronological, oldest first) and the current persona state P_t (and optionally a baseline P0).
-Your job is to extract EVIDENCE for each factor, decide DIRECTION (dir ∈ {{-1,0,1}}) and STRENGTH (str ∈ [0,1]) for only the traits mentioned in the Priors, then estimate per-trait salience ({{val, explain}}).
+Your task is:
+- Extract EVIDENCE for each factor, decide following adjustments to the current persona P_t for only the traits mentioned in the Priors below:
+    1. DIRECTION (dir ∈ {{-1,0,1}})
+    2. STRENGTH (str ∈ [0,1])
+    3. CONFIDENCE (conf ∈ [0,1])
+    4. REASON (brief text explanation with evidence snippets)
+- Estimate per-trait salience ({{val, explain}}).
+
+[Notes]:
+- Output STRICT JSON matching the schema below.
+- Think step-by-step before responding and be concise in explanations.
+- The user's personality attribute score is [0, 1], where 0 means the dimension is not present at all and 1 means it is fully present. You need to comprehensively consider the user's current personality attributes and the conversation content. If the user's performance in a certain dimension is too prominent, you need to lower the value to make the personality more in line with the actual performance and vise versa.
+- You need to consider each factor independently, as they may affect different dimensions, rather than first considering which individual dimensions will be affected and then fitting the factors.
+- If a factor is not mentioned in the context, set dir=0, str=0
 
 [Turns]:
 {ctx}
@@ -190,71 +203,68 @@ Your job is to extract EVIDENCE for each factor, decide DIRECTION (dir ∈ {{-1,
 {json.dumps(meta if meta is not None else None, ensure_ascii=False)}
 
 [Decision rules for direction/sign]
-- dir = +1  → the factor tends to AMPLIFY/encourage expression of the trait given the evidence.
-- dir = -1  → the factor tends to SUPPRESS/attenuate expression of the trait given the evidence (prefer this over +1 when the majority of signals point to inhibition, constraint, fatigue, conflict, or avoidance).
-- dir = 0   → insufficient or mixed evidence; or the trait is not mentioned for this factor.
-- Strength mapping guideline (not a hard rule): strong evidence → str≈0.7–1.0, moderate → 0.4–0.7, weak → 0.1–0.4; put str=0 if dir=0.
+- dir = +1  -> the factor tends to AMPLIFY/encourage expression of the trait given the evidence.
+- dir = -1  -> the factor tends to SUPPRESS/attenuate expression of the trait given the evidence.
+- dir = 0   -> insufficient or mixed evidence; or the trait is not mentioned for this factor.
+- Strength mapping guideline (not a hard rule): strong evidence -> str≈0.7–1.0, moderate -> 0.4–0.7, weak -> 0.1–0.4; put str=0 if dir=0.
 - Confidence 'conf' reflects evidence reliability/clarity (0–1). Penalize conf when evidence is indirect or contradictory.
-- If evidence is neutral or mixed, choose dir=0.
+- If evidence is neutral or mixed, choose dir=0. You may choose dir=0 or dir=-1 even if there is some weak evidence for +1.
 
-[Priors: up/down regulators per factor]
+[Priors: INCREASE/DECREASE regulators per factor]
 - motivation  (C, A, E, N):
-  • C↑ when seeking recognition/avoiding errors; C↓ with complacency, lack of stakes, fuzzy goals, chaotic priorities.
-  • A↓ with face-saving/defensiveness/territorial behavior; A↑ with prosocial duty or cooperative goals.
-  • E↑ with public visibility/social reward; E↓ with low visibility/solo, shame/withdrawal cues.
-  • N↑ with fear of failure/rumination; N↓ with reassurance/clear safety net.
+  • C INCREASES when seeking recognition/avoiding errors; C DECREASES with complacency, lack of stakes, fuzzy goals, chaotic priorities.
+  • A DECREASES with face-saving/defensiveness/territorial behavior; A INCREASES with prosocial duty or cooperative goals.
+  • E INCREASES with public visibility/social reward; E DECREASES with low visibility/solo, shame/withdrawal cues.
+  • N INCREASES with fear of failure/rumination; N DECREASES with reassurance/clear safety net.
 
 - topic_type  (O, E):
-  • O/E↑ with creative/playful/novel tasks; 
-  • E↓ with dull/formal/rote tasks; O↓ with rigid SOP/anti-novelty/bureaucratic grind.
+  • O/E INCREASES with creative/playful/novel tasks; 
+  • E DECREASES with dull/formal/rote tasks; O DECREASES with rigid SOP/anti-novelty/bureaucratic grind.
 
 - semantic_fit  (E, O, C):
-  • E↑ when content resonates with own experience/self-disclosure; E↓ when impersonal/3rd-person/alienating.
-  • O↑ for open-ended/ambiguous/idea-heavy material; O↓ for purely mechanical, highly constrained specs.
-  • C↑ when material is structured and rule-bound; C↓ when it’s inconsistent/contradictory/noisy.
+  • E INCREASES when content resonates with own experience/self-disclosure; E DECREASES when impersonal/3rd-person/alienating.
+  • O INCREASES for open-ended/ambiguous/idea-heavy material; O DECREASES for purely mechanical, highly constrained specs.
+  • C INCREASES when material is structured and rule-bound; C DECREASES when it’s inconsistent/contradictory/noisy.
 
 - internal_state  (N, C, E):
-  • N↑ with anxiety/vulnerability/overwhelm; N↓ with calm/regulated/grounded states.
-  • C↓ with tiredness/overload/cognitive depletion; C↑ with rested/alert/energetic states.
-  • E↓ with social fatigue/withdrawal; E↑ with energized/engaged mood.
+  • N INCREASES with anxiety/vulnerability/overwhelm; N DECREASES with calm/regulated/grounded states.
+  • C DECREASES with tiredness/overload/cognitive depletion; C INCREASES with rested/alert/energetic states.
+  • E DECREASES with social fatigue/withdrawal; E INCREASES with energized/engaged mood.
 
 - expected_impact  (A, C, N):
-  • A↑ with trust/support/prosocial payoff; A↓ with threat/blame/zero-sum framing.
-  • C↑ with productive leverage/clear efficacy; C↓ with low control/pointless busywork.
-  • N↑ when outcomes feel risky/irreversible; N↓ when safety margins and reversibility are explicit.
+  • A INCREASES with trust/support/prosocial payoff; A DECREASES with threat/blame/zero-sum framing.
+  • C INCREASES with productive leverage/clear efficacy; C DECREASES with low control/pointless busywork.
+  • N INCREASES when outcomes feel risky/irreversible; N DECREASES when safety margins and reversibility are explicit.
 
 - feedback  (N, A, E, C):
-  • N↑ with harsh criticism/anger/hostility; N↓ with validation/reassurance/specific guidance.
-  • A↑ with kindness/benefit-of-doubt; A↓ with sarcasm/contempt/stonewalling.
-  • E↓ with shaming/humiliation; E↑ with encouraging tone.
-  • C↑ with actionable checklists; C↓ with vague/conflicting asks.
+  • N INCREASES with harsh criticism/anger/hostility; N DECREASES with validation/reassurance/specific guidance.
+  • A INCREASES with kindness/benefit-of-doubt; A DECREASES with sarcasm/contempt/stonewalling.
+  • E DECREASES with shaming/humiliation; E INCREASES with encouraging tone.
+  • C INCREASES with actionable checklists; C DECREASES with vague/conflicting asks.
 
 - fluency  (E, C):
-  • E↑ with energetic rhythm/back-and-forth momentum; E↓ with monotone/withdrawn/fragmented flow.
-  • C↓ with chaotic/hesitant/derailed flow; C↑ with structured cadence and turn-taking norms.
+  • E INCREASES with energetic rhythm/back-and-forth momentum; E DECREASES with monotone/withdrawn/fragmented flow.
+  • C DECREASES with chaotic/hesitant/derailed flow; C INCREASES with structured cadence and turn-taking norms.
 
 - urgency  (C, A, N):
-  • C↑ with real deadlines/clear stakes; C↓ with false alarms/learned helplessness/priority thrash.
-  • A↓ with time-pressure misunderstandings leading to blame; A↑ when alignment reduces friction.
-  • N↑ with time scarcity + uncertainty; N↓ with buffered timelines and contingency plans.
+  • C INCREASES with real deadlines/clear stakes; C DECREASES with false alarms/learned helplessness/priority thrash.
+  • A DECREASES with time-pressure misunderstandings leading to blame; A INCREASES when alignment reduces friction.
+  • N INCREASES with time scarcity + uncertainty; N DECREASES with buffered timelines and contingency plans.
 
 - contextual_setting  (A, E, N):
-  • A↑ with group harmony/psychological safety; A↓ with overt conflict/competitive frames.
-  • E↓ with formal/unknown/large-audience settings; E↑ with familiar, small, informal settings.
-  • N↑ with scrutiny/high stakes; N↓ with low-stakes practice or backstage coordination.
+  • A INCREASES with group harmony/psychological safety; A DECREASES with overt conflict/competitive frames.
+  • E DECREASES with formal/unknown/large-audience settings; E INCREASES with familiar, small, informal settings.
+  • N INCREASES with scrutiny/high stakes; N DECREASES with low-stakes practice or backstage coordination.
 
 - relationship  (E, N, A):
-  • E↑ with familiar teammates/rapport; E↓ with strangers/hostile ties.
-  • N↑ when the space is safe to disclose vulnerability; N↓ when boundaries are respected and support norms are clear.
-  • A↑ with trust history/reciprocity; A↓ with breaches, perceived exploitation, or status threats.
+  • E INCREASES with familiar teammates/rapport; E DECREASES with strangers/hostile ties.
+  • N INCREASES when the space is safe to disclose vulnerability; N DECREASES when boundaries are respected and support norms are clear.
+  • A INCREASES with trust history/reciprocity; A DECREASES with breaches, perceived exploitation, or status threats.
 
 [Output STRICT JSON Schema]
 {schema}
 
-[Notes]
-- For each factor, only adjust the traits listed above; keep others at dir=0,str=0,conf=0.
-- Provide a brief 'explain' and include short 'evidence' snippets quoted/paraphrased from the context.
-- Output STRICT JSON ONLY. No extra text.
+
 """.strip()
 
 
@@ -324,10 +334,10 @@ Your job is to extract EVIDENCE for each factor, decide DIRECTION (dir ∈ {{-1,
 
     # -------- 聚合十因子 → 每维最终分 --------
     def _aggregate(self, raw: dict) -> dict:
-        logger.debug(f"[predictor] raw JSON: {json.dumps(raw, ensure_ascii=False)[:1500]}")
+        logger.debug(f"[predictor] raw JSON: {json.dumps(raw, ensure_ascii=False, indent=2)}")
         total = {k: 0.0 for k in DIMENSIONS}
         for factor in W:
-            per = raw.get("factors", {}).get(factor, {}).get("per_trait", {})
+            per = raw.get("factors", {}).get(factor, {})
             for k in DIMENSIONS:
                 if W[factor][k] == 0:
                     continue
