@@ -257,6 +257,6 @@ BIG5_DEFINITIONS = {
   "A": "Agreeableness: the tendency to be compassionate, cooperative, trusting, and concerned for others.",
   "N": "Neuroticism: the tendency to experience negative emotions such as anxiety, anger, or vulnerability more easily."
 }
-
-for i in PRIORS:
-    print(generate_prior_prompt(i, ["N"]))
+if __name__ == "__main__":
+  for i in PRIORS:
+      print(generate_prior_prompt(i, ["N"]))
