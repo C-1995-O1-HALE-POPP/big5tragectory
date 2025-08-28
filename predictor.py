@@ -36,17 +36,25 @@ from openai import OpenAI
 from loguru import logger
 from prompt import generate_prior_prompt, W, BIG5_DEFINITIONS  # <- 需提供：W[factor][trait]权重矩阵、维度定义、先验生成函数
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Semaphore
 # ------------------------------
 # Constants & Heuristics
 # ------------------------------
 DIMENSIONS = ["O", "C", "E", "A", "N"]
-
+RPM_LIMIT = 300  
+semaphore = Semaphore(RPM_LIMIT // 60)
 # 这些“提及度”用于构造全局权重 G（只在需要时使用）
 MENTIONS = {
     "motivation":83,"topic_type":66,"semantic_fit":54,"internal_state":53,
     "expected_impact":46,"feedback":41,"fluency":38,"urgency":31,
     "contextual_setting":18,"relationship":17
 }
+
+LO_TRAIT = 0.2
+HI_TRAIT = 0.8
+
+WEAK_TRAIT_NORM = 0.33
+STRONG_TRAIT_NORM = 0.66
 
 # Global weights per factor per trait — normalized only across factors that touch that trait
 G = {
@@ -69,7 +77,7 @@ PHASE1_SCHEMA = {
 # ------------------------------
 # Logger
 # ------------------------------
-LOG_LEVEL = os.getenv("QWEN_SCORER_LOG_LEVEL", "INFO")
+LOG_LEVEL = os.getenv("QWEN_SCORER_LOG_LEVEL", "DEBUG")
 logger.remove()
 logger.add(
     sink=lambda msg: print(msg, end=""),
@@ -116,6 +124,44 @@ class llmClient:
         logger.debug(f"[chat_once] {dt:.1f}ms, len={len(text)}")
         return text
 
+    def chat_stream(self,
+                    messages: list,
+                    temperature: Optional[float] = None,
+                    max_tokens: Optional[int] = None,
+                    enable_thinking: bool = False):
+        """流式生成：yield 文本增量"""
+        t0 = time.time()
+        stream = self.client.chat.completions.create(
+            model=self.model,
+            temperature=self.temperature if temperature is None else float(temperature),
+            max_tokens=max_tokens if (max_tokens and max_tokens > 0) else None,
+            messages=messages,
+            stream=True,
+            # extra_body={"enable_thinking": enable_thinking},
+        )
+        total = ""
+        for chunk in stream:
+            # 兼容某些实现末尾会给空 choices 的情况
+            if not getattr(chunk, "choices", None):
+                continue
+            choice = chunk.choices[0]
+            # 某些实现会在流中就带 finish_reason
+            if getattr(choice, "finish_reason", None):
+                break
+            delta = getattr(choice, "delta", None)
+            if delta and getattr(delta, "content", None):
+                total += delta.content
+                yield delta.content  # 返回增量
+        dt = (time.time() - t0) * 1000
+        logger.debug(f"[Qwen stream] latency={dt:.1f}ms, resp_len={len(total)}")
+
+    def change_model(self, model: str):
+        self.model = model
+        logger.info(f"LLM change model to {model}")
+    
+    def change_temperature(self, temperature: float):
+        self.temperature = temperature
+        logger.info(f"LLM change temperature to {temperature}")
 # ------------------------------
 # Utils
 # ------------------------------
@@ -164,7 +210,8 @@ class HeuristicMotivePredictor:
     def __init__(self, llm: llmClient, beta: float = 1.3,
                  use_global_factor_weight: bool = True,
                  max_retries: int = 3, retry_delay: float = 1.0,
-                 backoff: float = 1.8, jitter: float = 0.25):
+                 backoff: float = 1.8, jitter: float = 0.25,
+                 eps: float = 0.25):
         self.llm = llm
         self.beta = float(beta)
         self.use_g = bool(use_global_factor_weight)
@@ -172,6 +219,7 @@ class HeuristicMotivePredictor:
         self.retry_delay = float(retry_delay)
         self.backoff = float(backoff)
         self.jitter = float(jitter)
+        self.eps = eps  # 用于判定 signed_sum 是否为零
 
     # ---------- Robust LLM JSON parsing with retries ----------
     def _parse_json(self, text: str) -> dict:
@@ -190,20 +238,21 @@ class HeuristicMotivePredictor:
         """
         Call LLM with retries and return parsed JSON.
         """
-        delay = self.retry_delay
-        last_exc = None
-        for attempt in range(1, self.max_retries + 1):
-            try:
-                text = self.llm.chat_once(messages=[{"role": "user", "content": prompt}])
-                data = self._parse_json(text)
-                return data
-            except Exception as e:
-                last_exc = e
-                if attempt == self.max_retries:
-                    break
-                sleep_s = max(0.2, delay * (self.backoff ** (attempt - 1)) * (1.0 + random.uniform(-self.jitter, self.jitter)))
-                time.sleep(sleep_s)
-        raise RuntimeError(f"LLM call/parse failed after retries: {last_exc}")
+        with semaphore:
+            delay = self.retry_delay
+            last_exc = None
+            for attempt in range(1, self.max_retries + 1):
+                try:
+                    text = self.llm.chat_once(messages=[{"role": "user", "content": prompt}])
+                    data = self._parse_json(text)
+                    return data
+                except Exception as e:
+                    last_exc = e
+                    if attempt == self.max_retries:
+                        break
+                    sleep_s = max(0.2, delay * (self.backoff ** (attempt - 1)) * (1.0 + random.uniform(-self.jitter, self.jitter)))
+                    time.sleep(sleep_s)
+            raise RuntimeError(f"LLM call/parse failed after retries: {last_exc}")
 
     # ---------- Stage 1 ----------
     @staticmethod
@@ -233,7 +282,7 @@ Task:
 Trait to focus:
 {trait} ({BIG5_DEFINITIONS[trait]}).
 
-Persona scale: traits in [0,1]; <0.33 weak, 0.33–0.66 moderate, >0.66 strong.
+Persona scale: traits in [0,1]; <{WEAK_TRAIT_NORM} weak, {WEAK_TRAIT_NORM}–{STRONG_TRAIT_NORM} moderate, >{STRONG_TRAIT_NORM} strong.
 
 [Context Turns]
 {ctx}
@@ -315,7 +364,8 @@ Persona scale: traits in [0,1]; <0.33 weak, 0.33–0.66 moderate, >0.66 strong.
     def _build_phase2_prompt(context_turns: List[str], P_t: Dict[str, float],
                              phase1_trait: dict, trait: str,
                              P0: Optional[Dict[str, float]] = None,
-                             meta: Optional[Dict[str, Any]] = None) -> str:
+                             meta: Optional[Dict[str, Any]] = None,
+                             history: Optional[List] = None) -> str:
         """
         Stage-2（单一 trait）：隐藏 ADJUST/MAINTAIN 标签，仅提供该 trait 的 factor 列表。
         对每个 factor→trait 输出 (dir ∈ {-1,1}, score ∈ {1..5}, conf ∈ [0,1], reason)。
@@ -338,11 +388,17 @@ For every factor, output:
 - reason: one short, evidence-grounded justification
 
 Persona scale: trait values in [0,1]: 
-- <0.33 = weakly expressed; 0.33–0.66 = moderately; >0.66 = strongly expressed.
+- <{WEAK_TRAIT_NORM} weak, {WEAK_TRAIT_NORM}–{STRONG_TRAIT_NORM} moderate, >{STRONG_TRAIT_NORM} strong.
 
-You should pay special attention to the current personality dimension value (P_t). 
-If it is too high or too low (for example, below 0.05 or above 0.95), make appropriate maintenance towards the middle value to leave enough space for personality changes in future conversations.
-The interactions between personality dimensions should also be considered (For example, a neurotic person might behave in an extroverted way).
+You should pay attention to the current personality dimension value (P_t). 
+If it is too high or too low (for example, below {LO_TRAIT} or above {HI_TRAIT}), make appropriate maintenance towards the middle value to leave enough space for personality changes in future conversations.
+
+More importantly, you should consider your previous rounds of adjustments to avoid overcorrection. 
+For example, if you've already increased a dimension multiple times (more than three times), in future adjustments, consider decreasing that dimension's value first, rather than maintaining or increasing it.
+Your operation history is shown below. 1 indicates increases in dimension values, while -1 indicate decreases. The earliest rounds are prioritized.
+
+[Operation History]
+{json.dumps(history, ensure_ascii=False)}
 
 [Context Turns]
 {ctx}
@@ -420,7 +476,8 @@ The interactions between personality dimensions should also be considered (For e
     # ---------- Public API ----------
     def score(self, context_turns: List[str], P_t: Dict[str, float],
               P0: Optional[Dict[str, float]] = None,
-              meta: Optional[Dict[str, Any]] = None) -> dict:
+              meta: Optional[Dict[str, Any]] = None,
+              history: Optional[Dict[str, List]] = None) -> dict:
         """
         顺序跑 O,C,E,A,N 五个维度（如需并发，参考注释的 ThreadPoolExecutor 版本）。
         每个维度独立走 Stage-1 (ADJUST/MAINTAIN evidence) + Stage-2 (factor 评分)。
@@ -433,7 +490,7 @@ The interactions between personality dimensions should also be considered (For e
             adjust_factors = self._get_phase2_factors(p1_trait, adjust_only=True)
 
             # Stage 2
-            p2_prompt = self._build_phase2_prompt(context_turns, P_t, p1_trait, trait, P0, meta)
+            p2_prompt = self._build_phase2_prompt(context_turns, P_t, p1_trait, trait, P0, meta, history.get(trait)) # type: ignore
             p2_raw = self._ask_json(p2_prompt)
             p2_trait = self._parse_phase2_one_trait(p2_raw, trait, p1_trait)
 
@@ -443,7 +500,7 @@ The interactions between personality dimensions should also be considered (For e
             m_raw, m_norm = _expected_from_probs(probs)
 
             signed_sum = sum(e["dir"] * e["score"] * e["conf"] for e in eval_list)
-            direction = 1 if signed_sum > 0.2 else (-1 if signed_sum < -0.2 else 0)
+            direction = 1 if signed_sum > self.eps else (-1 if signed_sum < -self.eps else 0)
 
             motive_trait = {
                 "m_raw": round(m_raw, 6),

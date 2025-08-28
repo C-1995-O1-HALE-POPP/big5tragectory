@@ -1,13 +1,24 @@
 # state_tracker.py
+# -*- coding: utf-8 -*-
+"""
+Section 4.1 Trigger + 4.3 Inference — Persona State Tracker (paper-aligned)
+包含三处“更强回归到 P0”的实现：
+A) 门控未触发时的被动回归（passive regression）
+B) 有方向更新时的“皮筋回拉”目标混合（toward P0）
+C) 每轮末尾的极小全局回归（micro drift toward P0）
+"""
+
 import json
 from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional
-import math
+from typing import Dict, List, Optional, Iterable
 import random
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from loguru import logger
 from tqdm import tqdm
+
+# two-stage predictor（需保证其 score 输出 "motive.{dim}.m_norm" 与 "direction"）
 from predictor import HeuristicMotivePredictor, llmClient
 
 # ------------------------------
@@ -24,169 +35,302 @@ def clamp(x: float, lo: float, hi: float) -> float:
 # ------------------------------
 
 @dataclass
-class MotiveDecision:
-    strength: float   # strength in [-1, 1]
-    salience: float   # how much this trait was expressed this turn
-
-@dataclass
 class TurnRecord:
     t: int
-    utterance: str
-    Pt: Dict[str, float]
-    alpha: Dict[str, float]
-    d_t: Dict[str, float]
-    c_t: Dict[str, float]
-    motive_strength: Dict[str, float]
-    motive_direction: Dict[str, int]
-    P_target: Dict[str, float]
+    utterance: str                         # 当前触发计算的用户话语
+    Pt: Dict[str, float]                   # 更新后的 P_t
+    alpha: Dict[str, float]                # α_i
+    decay: Dict[str, float]                # d_t = λ^(t-τ_i)
+    m_signed: Dict[str, float]             # m_i 带符号（direction * m_norm ∈ [-1,1]）
+    direction: Dict[str, int]              # d_i ∈ {-1,0,1}
+    m_norm: Dict[str, float]               # ∈ [0,1]
+    P_target: Dict[str, float]             # 更新时的目标状态
 
 # ------------------------------
-# Persona State Tracker
+# Persona State Tracker (paper-aligned)
 # ------------------------------
 
 class PersonaStateTracker:
     def __init__(
         self,
         P0: Dict[str, float],
-        predictor=None,
+        predictor: Optional[HeuristicMotivePredictor] = None,
 
-        # --- 动态调节相关 ---
-        delta_min: float = 0.1,        # 每次最小步长
-        delta_max: float = 0.5,        # 每次最大步长
-        alpha_cap: float = 0.75,       # 权重 a 上限
+        # 论文里的 “±0.1 的方向性微调”（此处做成可调）
+        target_step: float = 0.10,
 
-        # --- 回归相关 ---
-        lambda_reg: float = 0.85,      # 回归速率 λ
-        regression_scale: float = 0.5, # 偏离多大触发明显回归
-        eps_near: float = 0.05,        # 距离基线小于该阈值，标记为“靠近基线”
-        reg_gamma: float = 2.0,        # 回归强化指数 γ（越大越快拉回 P0）
-        p0_pull_base: float = 0.15,    # 有方向时的基线牵引常量
-        p0_pull_slope: float = 0.5,    # 有方向时基线牵引随偏离增强
-        drift_per_turn: float = 0.0,   # 每回合微小回归系数（0.0 ~ 0.05 较合理）
+        # 回归因子 λ（0<λ<1），以及 α 的上限（保障数值稳定）
+        lambda_decay: float = 0.85,
+        alpha_cap: float = 0.75,
 
-        # --- 冷却/突显相关 ---
-        cold_k: int = 3,               # 若超过 k 轮未触发，cold bonus 生效
-        cold_bonus: float = 0.5,       # 冷却奖励因子
-        salience_threshold: float = 0.7, # 突显阈值
+        # ---- 4.1 Trigger → Gate 参数 ----
+        gate_m_norm: float = 0.25,          # 判定显著性的最小 m_norm
+        gate_min_dims: int = 1,             # 至少多少个维度触发（direction≠0 且 m_norm≥阈值）
+        cooldown_k: int = 1,                 # 同一维度更新后至少间隔 k 轮才允许再次触发
 
-        # --- 其他 ---
+        # ---- A) 门控未触发时的被动回归 ----
+        passive_reg_alpha: float = 0.06,     # Gate=false 时的基础回归步长（0~0.12 建议）
+        passive_reg_use_decay: bool = True,  # 是否乘以 d_t 衰减（更平滑）
+
+        # ---- C) 每轮末尾的极小全局回归 ----
+        global_drift: float = 0.02,          # 0~0.03：太大将掩盖正常更新
+
+        # 其它
         rng: Optional[random.Random] = None,
-        task_meta: str = None
+        task_meta: Optional[Dict] = None,
+        eps_update: float = 1e-9
     ):
+        assert all(k in P0 for k in DIMENSIONS), "P0 must have O,C,E,A,N"
         self.P0 = {d: clamp(float(P0[d]), 0.0, 1.0) for d in DIMENSIONS}
         self.Pt = self.P0.copy()
         self.t = 0
 
-        # 参数保存
-        self.delta_min = delta_min
-        self.delta_max = delta_max
-        self.alpha_cap = alpha_cap
+        self.target_step = float(target_step)
+        self.lambda_decay = float(lambda_decay)
+        self.alpha_cap = float(alpha_cap)
+        self.eps_update = float(eps_update)
 
-        self.lambda_reg = lambda_reg
-        self.regression_scale = regression_scale
-        self.eps_near = eps_near
-        self.reg_gamma = reg_gamma
-        self.p0_pull_base = p0_pull_base
-        self.p0_pull_slope = p0_pull_slope
-        self.drift_per_turn = drift_per_turn
-
-        self.cold_k = cold_k
-        self.cold_bonus = cold_bonus
-        self.salience_threshold = salience_threshold
-
-        self.rng = rng or random.Random(1234)
         self.predictor = predictor or HeuristicMotivePredictor(llmClient())
         self.task_meta = task_meta
+        self.rng = rng or random.Random(1234)
 
-        self.last_near_baseline_turn = {d: 0 for d in DIMENSIONS}
-        self.last_salient_turn = {d: -999 for d in DIMENSIONS}
+        # Gate 配置
+        self.gate_m_norm = float(gate_m_norm)
+        self.gate_min_dims = int(gate_min_dims)
+        self.cooldown_k = int(cooldown_k)
+
+        # A) 被动回归
+        self.passive_reg_alpha = float(passive_reg_alpha)
+        self.passive_reg_use_decay = bool(passive_reg_use_decay)
+
+        # C) 全局极小回归
+        self.global_drift = float(global_drift)
+
+        # τ_i：上一次该维度发生“有效更新”的对话轮次（初始化为 0）
+        self.last_update_turn: Dict[str, int] = {d: 0 for d in DIMENSIONS}
+        self.update_history = {d: [] for d in DIMENSIONS}
+
+        # 历史
         self.history: List[TurnRecord] = []
         self.chat_history: List[str] = []
 
-    # --- 动态系数 ---
-    def compute_d_t(self, d: str) -> float:
-        age = max(0, self.t - self.last_near_baseline_turn[d])
-        base = 1.0 - math.exp(-self.lambda_reg * age)
-        dist = abs(self.Pt[d] - self.P0[d])
-        damp = (1.0 - dist)  # 偏离越远，惯性越小
-        return clamp(base * damp, 0.0, 1.0)
+        logger.info(
+            f"[Init] P0={self.P0} | target_step={self.target_step} "
+            f"| lambda_decay={self.lambda_decay} | alpha_cap={self.alpha_cap} "
+            f"| gate(m_norm≥{self.gate_m_norm}, min_dims={self.gate_min_dims}, cooldown={self.cooldown_k}) "
+            f"| passive_reg_alpha={self.passive_reg_alpha}×decay={self.passive_reg_use_decay} "
+            f"| global_drift={self.global_drift}"
+        )
 
-    def compute_c_t(self, d: str) -> float:
-        idle = self.t - self.last_salient_turn[d] >= self.cold_k
-        return 1.0 + (self.cold_bonus if idle else 0.0)
+    # ---- Gate: 是否进入 Inference+Update ----
+    def should_adjust(self, scored: dict) -> bool:
+        motive = scored.get("motive", {}) or {}
+        hits = []
+        logs = []
+        for d in DIMENSIONS:
+            m = motive.get(d, {}) or {}
+            m_norm = float(m.get("m_norm", 0.0))
+            direction = int(m.get("direction", 0))
+            direction = -1 if direction < 0 else (1 if direction > 0 else 0)
+            since = self.t - self.last_update_turn[d]
+            cool_ok = since >= self.cooldown_k
+            good = (direction != 0) and (m_norm >= self.gate_m_norm) and cool_ok
+            if good:
+                hits.append(d)
+            logs.append(f"{d}(dir={direction:+d}, m={m_norm:.2f}, since={since}, cool_ok={int(cool_ok)})")
 
-    # --- 主流程 ---
+        cond_dims = (len(hits) >= self.gate_min_dims)
+        logger.info(f"[Gate] decision={cond_dims} (dim_hits={hits}, need≥{self.gate_min_dims}) | {', '.join(logs)}")
+        return cond_dims
+
+    # ---- 主入口：处理一批消息（通常按一条 user 消息触发一次） ----
     def step(self, context: List[Dict[str, str]]) -> Dict[str, float]:
+        """
+        context: list of {"role": "user"/"assistant"/"system", "content": "..."}
+        只有当最后一条是 user 时，才进行一轮 persona 更新。
+        """
         if not context or not isinstance(context, list):
-            raise ValueError("Context must be a list of {role, content}.")
-        for utterance in context:
-            self.chat_history.append(f"[{utterance['role']}] {utterance['content']}")
-        if context[-1]["role"] != "user":
+            raise ValueError("Context must be a list of {'role','content'} dicts.")
+
+        # 累积到完整上下文，以字符串形式喂给 predictor
+        for msg in context:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            self.chat_history.append(f"[{role.upper()}] {content}")
+
+        if context[-1].get("role") != "user":
             return {}
 
+        # 进入一次“用户回合”
         self.t += 1
-        scored = self.predictor.score(self.chat_history, self.Pt, self.P0, self.task_meta)
+        last_text = context[-1].get('content', '')
+        logger.info(f"[Turn {self.t}] user: {last_text[:200]}")
 
-        alpha, d_t_map, c_t_map = {}, {}, {}
-        motive_strength, motive_direction, P_target = {}, {}, {}
+        # 先跑一次两阶段评估
+        scored = self.predictor.score(
+            context_turns=self.chat_history,
+            P_t=self.Pt,
+            P0=self.P0,
+            meta=self.task_meta,
+            history=self.update_history  # 如果 predictor 用得到
+        )
 
-        logger.info(f"[Turn {self.t}] context: {context[-1]['content']}")
+        # ---- A) Gate=false：执行被动回归至 P0 ----
+        if not self.should_adjust(scored):
+            alpha_passive, decay_now = {}, {}
+            for d in DIMENSIONS:
+                delta_turns = max(0, self.t - self.last_update_turn[d])
+                d_t = self.lambda_decay ** delta_turns
+                decay_now[d] = d_t
+                a = self.passive_reg_alpha * (d_t if self.passive_reg_use_decay else 1.0)
+                a = clamp(a, 0.0, 0.25)  # 被动回归防抖上限
+                pt_now = self.Pt[d]
+                pt_target = self.P0[d]
+                pt_next = (1.0 - a) * pt_now + a * pt_target
+                self.Pt[d] = clamp(pt_next, 0.0, 1.0)
+                alpha_passive[d] = a
+                logger.debug(f"[PassiveReg] {d}: a={a:.3f} P_t={pt_now:.3f}→{self.Pt[d]:.3f} →P0={pt_target:.3f}")
+
+            # 轮末 C) 全局极小回归
+            if self.global_drift > 0.0:
+                for d in DIMENSIONS:
+                    before = self.Pt[d]
+                    self.Pt[d] = (1.0 - self.global_drift) * self.Pt[d] + self.global_drift * self.P0[d]
+                    logger.debug(f"[Drift] {d}: {before:.3f}→{self.Pt[d]:.3f} (toward P0={self.P0[d]:.3f})")
+
+            rec = TurnRecord(
+                t=self.t,
+                utterance=last_text,
+                Pt=self.Pt.copy(),
+                alpha=alpha_passive,
+                decay=decay_now,
+                m_signed={d: 0.0 for d in DIMENSIONS},
+                direction={d: 0 for d in DIMENSIONS},
+                m_norm={d: 0.0 for d in DIMENSIONS},
+                P_target={d: self.P0[d] for d in DIMENSIONS},
+            )
+            self.history.append(rec)
+            logger.info(f"[Turn {self.t}] Gate=false → passive regression applied. Pt={json.dumps(self.Pt, ensure_ascii=False)}")
+            return self.Pt.copy()
+
+        # ---- 进入 Update 阶段（按论文公式） ----
+        alpha: Dict[str, float] = {}
+        decay: Dict[str, float] = {}
+        m_signed: Dict[str, float] = {}
+        m_norm_map: Dict[str, float] = {}
+        direction_map: Dict[str, int] = {}
+        P_target: Dict[str, float] = {}
+
+        updated_dims = []
+        alpha_values = []
 
         for dim in DIMENSIONS:
-            signed_m = float(scored["final"].get(dim, 0.0))
-            salience = float(scored["salience"].get(dim, {}).get("val", 0.0))
-            direction, strength = (0, 0.0) if abs(signed_m) < 1e-6 else ((1 if signed_m > 0 else -1), min(abs(signed_m), 1.0))
-            if salience > self.salience_threshold or direction != 0:
-                self.last_salient_turn[dim] = self.t
+            org = self.Pt[dim]
+            mot = (scored.get("motive") or {}).get(dim, {})
+            m_norm = float(mot.get("m_norm", 0.0))           # ∈ [0,1]
+            direction = int(mot.get("direction", 0))         # -1/0/1
+            direction = -1 if direction < 0 else (1 if direction > 0 else 0)
 
-            d_t = self.compute_d_t(dim)
-            c_t = self.compute_c_t(dim)
+            # d_t = λ^(t - τ_i)
+            delta_turns = max(0, self.t - self.last_update_turn[dim])
+            d_t = self.lambda_decay ** delta_turns
 
-            # 回归强度
-            r_t = clamp(abs(self.Pt[dim] - self.P0[dim]) / max(1e-6, self.regression_scale), 0.0, 1.0)
-            r_eff = 1.0 - (1.0 - r_t) ** self.reg_gamma
+            # α_i = clamp(m_norm * d_t, 0, α_cap)
+            a = clamp(m_norm * d_t, 0.0, self.alpha_cap)
 
-            if direction == 0:
-                m_eff, target_value = r_eff, self.P0[dim]
+            # 计算 pt_target（方向性微调；direction=0 → 回落到 P0）
+            pt_now = self.Pt[dim]
+            if direction > 0:
+                pt_target = clamp(pt_now + self.target_step, 0.0, 1.0)
+            elif direction < 0:
+                pt_target = clamp(pt_now - self.target_step, 0.0, 1.0)
             else:
-                m_eff = strength
-                delta = self.delta_min + (self.delta_max - self.delta_min) * m_eff
-                target_behavior = clamp(self.Pt[dim] + (delta if direction > 0 else -delta), 0.0, 1.0)
-                eta = clamp(self.p0_pull_base + self.p0_pull_slope * r_eff, 0.0, 0.95)
-                target_value = (1 - eta) * target_behavior + eta * self.P0[dim]
+                pt_target = self.P0[dim]
 
-            a = clamp(m_eff * d_t * c_t, 0.0, self.alpha_cap)
-            new_val = (1 - a) * self.Pt[dim] + a * target_value
+            # ---- B) “皮筋回拉”：目标点朝 P0 混合，偏离越远回拉越强 ----
+            dist = abs(pt_now - self.P0[dim])
+            eta = 0.15 + 0.50 * dist          # 约 0.15~0.65
+            eta = clamp(eta, 0.0, 0.75)
+            pt_target = (1 - eta) * pt_target + eta * self.P0[dim]
 
-            # 事后微小回归
-            if self.drift_per_turn > 0.0:
-                new_val -= self.drift_per_turn * (new_val - self.P0[dim])
+            # 护栏（可选）：偏离过大时压制步长并强制朝 P0
+            if dist > 0.35:
+                a = min(a, 0.25)
+                pt_target = self.P0[dim]
 
-            if abs(new_val - self.P0[dim]) < self.eps_near:
-                self.last_near_baseline_turn[dim] = self.t
+            # P_{t+1} = (1-α) P_t + α P_target
+            pt_next = (1.0 - a) * pt_now + a * pt_target
 
-            alpha[dim], d_t_map[dim], c_t_map[dim] = a, d_t, c_t
-            motive_strength[dim], motive_direction[dim], P_target[dim] = m_eff, direction, target_value
-            self.Pt[dim] = clamp(new_val, 0.0, 1.0)
+            # 记录
+            alpha[dim] = a
+            decay[dim] = d_t
+            m_signed[dim] = direction * m_norm
+            direction_map[dim] = direction
+            m_norm_map[dim] = m_norm
+            P_target[dim] = pt_target
 
-            logger.debug(f"  {dim}: dir={direction}, m_eff={m_eff:.3f}, r_eff={r_eff:.3f}, "
-                         f"d_t={d_t:.3f}, c_t={c_t:.2f}, Pt→{self.Pt[dim]:.3f}")
+            # 应用
+            changed = abs(pt_next - pt_now) > self.eps_update
+            self.Pt[dim] = clamp(pt_next, 0.0, 1.0)
+            if changed and a > 0.0:
+                self.last_update_turn[dim] = self.t
+                updated_dims.append(dim)
+                alpha_values.append(a)
+            self.update_history[dim].append(1 if self.Pt[dim] - org >= 0 else -1)
 
-        rec = TurnRecord(self.t, context[-1]["content"], self.Pt.copy(),
-                         alpha, d_t_map, c_t_map, motive_strength, motive_direction, P_target)
+            logger.debug(
+                f"[Upd] {dim}: dir={direction:+d}  m_norm={m_norm:.3f}  d_t={d_t:.3f}  "
+                f"α={a:.3f}  P_t={pt_now:.3f}→{self.Pt[dim]:.3f}  P_target={pt_target:.3f}  dist={dist:.3f}"
+            )
+
+        # ---- C) 每轮末尾的极小全局回归（不改变 α 记录）----
+        if self.global_drift > 0.0:
+            for d in DIMENSIONS:
+                before = self.Pt[d]
+                self.Pt[d] = (1.0 - self.global_drift) * self.Pt[d] + self.global_drift * self.P0[d]
+                logger.debug(f"[Drift] {d}: {before:.3f}→{self.Pt[d]:.3f} (toward P0={self.P0[d]:.3f})")
+
+        # 回合汇总日志
+        if alpha_values:
+            alpha_mean = sum(alpha_values) / len(alpha_values)
+            alpha_max = max(alpha_values)
+        else:
+            alpha_mean = 0.0
+            alpha_max = 0.0
+        logger.info(
+            f"[Turn {self.t} Summary] updated_dims={updated_dims or '∅'} "
+            f"| α_mean={alpha_mean:.3f} α_max={alpha_max:.3f} "
+            f"| Pt={json.dumps(self.Pt, ensure_ascii=False)}"
+        )
+
+        # 保存记录
+        rec = TurnRecord(
+            t=self.t,
+            utterance=last_text,
+            Pt=self.Pt.copy(),
+            alpha=alpha,
+            decay=decay,
+            m_signed=m_signed,
+            direction=direction_map,
+            m_norm=m_norm_map,
+            P_target=P_target,
+        )
         self.history.append(rec)
+
         return self.Pt.copy()
 
+    # ---- 运行一个完整对话序列（逐条传入消息） ----
     def run_dialogue(self, utterances: List[Dict[str, str]]) -> List[Dict[str, float]]:
-        logger.info("=== Starting dialogue simulation ===")
+        logger.info("=== Starting dialogue (paper-aligned tracker: Gate + A/B/C regressions) ===")
         traj = [self.Pt.copy()]
         for u in tqdm(utterances):
             res = self.step([u])
             if res:
                 traj.append(res)
-        logger.info("=== Dialogue simulation finished ===")
+        logger.info("=== Dialogue finished ===")
         return traj
 
+    # ---- 导出为 DataFrame 便于分析/作图 ----
     def to_dataframe(self) -> pd.DataFrame:
         rows = []
         for rec in self.history:
@@ -194,111 +338,102 @@ class PersonaStateTracker:
             for d in DIMENSIONS:
                 row[f"P_{d}"] = rec.Pt[d]
                 row[f"alpha_{d}"] = rec.alpha[d]
-                row[f"d_t_{d}"] = rec.d_t[d]
-                row[f"c_t_{d}"] = rec.c_t[d]
-                row[f"mot_{d}"] = rec.motive_strength[d]
-                row[f"dir_{d}"] = rec.motive_direction[d]
-                row[f"tgt_{d}"] = rec.P_target[d]
+                row[f"decay_{d}"] = rec.decay[d]
+                row[f"m_signed_{d}"] = rec.m_signed[d]
+                row[f"dir_{d}"] = rec.direction[d]
+                row[f"m_norm_{d}"] = rec.m_norm[d]
+                row[f"target_{d}"] = rec.P_target[d]
             rows.append(row)
         return pd.DataFrame(rows)
 
-    def get_current_trait(self): return self.history[-1].Pt if self.history else self.P0
-    def get_history(self): return self.history
+    # ---- 便捷访问 ----
+    def get_current_state(self) -> Dict[str, float]:
+        return self.Pt.copy()
 
+    def get_history(self) -> List[TurnRecord]:
+        return list(self.history)
+
+# ------------------------------
+# Demo dialogue
+# ------------------------------
 dialogue = [
-    {
-        "role": "system",
-        "content": "Conversation about work, stress regulation, and execution. We expect repeating cycles of anxiety → relaxation → focus. The assistant should be supportive, pragmatic, and concise."
-    },
+    {"role": "system", "content": "Conversation about work, stress regulation, and execution."},
 
     # --- Cycle 1 ---
     {"role": "user", "content": "Deadlines freak me out… I’m tense and overthinking. 焦虑 紧张 担忧"},
-    {"role": "assistant", "content": "I hear the pressure. Let’s label it: anxiety spiking due to uncertainty. 识别情绪 同理"},
+    {"role": "assistant", "content": "I hear the pressure. Let’s label it and plan a small step."},
     {"role": "user", "content": "Let’s slow down—box breathing for 1 minute. 放松 呼吸 冥想"},
-    {"role": "assistant", "content": "Inhale 4, hold 4, exhale 4, hold 4. I’ll count with you. 放松引导 调节"},
-    {"role": "user", "content": "Feeling calmer. I’ll do a 25-minute focus sprint on the brief. 专注 深度工作 执行"},
-    {"role": "assistant", "content": "Timer set to 25m. Goal: outline 3 sections, defer polish. 聚焦 取舍 计划"},
+    {"role": "assistant", "content": "Inhale 4, hold 4, exhale 4, hold 4. I’ll count with you."},
+    {"role": "user", "content": "Feeling calmer. I’ll do a 25-minute focus sprint on the brief."},
+    {"role": "assistant", "content": "Timer set to 25m. Outline 3 sections first."},
 
     # --- Cycle 2 ---
     {"role": "user", "content": "Heart racing again—too many unknowns. 焦虑 分心"},
-    {"role": "assistant", "content": "Name it, normalize it: stress ≠ failure. We’ll contain scope. 接纳 情绪容纳"},
+    {"role": "assistant", "content": "Stress ≠ failure. We’ll contain scope."},
     {"role": "user", "content": "Tea break + soft music, 5 minutes. 放松 小歇"},
-    {"role": "assistant", "content": "Good call—lo-fi on, hydration check. 放松 复原"},
-    {"role": "user", "content": "Back to work—finish the KPI table first. 专注 优先级"},
-    {"role": "assistant", "content": "Single-task: fill metrics A/B/C; no tabs switching. 专注 限制干扰"},
+    {"role": "assistant", "content": "Lo-fi on, hydration check."},
+    {"role": "user", "content": "Back to work—finish the KPI table first."},
+    {"role": "assistant", "content": "Single-task: fill metrics A/B/C; no tabs switching."},
 
     # --- Cycle 3 ---
     {"role": "user", "content": "Mind spiral: what if we miss the review? 焦虑 预期灾难"},
-    {"role": "assistant", "content": "Let’s separate facts from fears. Fact: draft exists; gap: examples. 认知重构 稳定"},
-    {"role": "user", "content": "I’ll stretch shoulders + 10 deep breaths. 放松 伸展"},
-    {"role": "assistant", "content": "Hold each stretch 20s; keep jaw unclenched. 放松 体感落地"},
-    {"role": "user", "content": "Okay—focus on writing two concrete examples. 专注 可交付"},
-    {"role": "assistant", "content": "Checklist created; marking done when examples compile. 执行 反馈循环"},
+    {"role": "assistant", "content": "Separate facts from fears—draft exists; add examples."},
+    {"role": "user", "content": "Stretch shoulders + 10 deep breaths. 放松 伸展"},
+    {"role": "assistant", "content": "Hold each stretch 20s; relax your jaw."},
+    {"role": "user", "content": "Okay—focus on two concrete examples."},
+    {"role": "assistant", "content": "Checklist created; mark as done when examples compile."},
 
     # --- Cycle 4 ---
     {"role": "user", "content": "Inbox pinged—now I’m jittery again. 焦虑 干扰"},
-    {"role": "assistant", "content": "Snooze notifications for 30m; anxiety noted, not obeyed. 边界 管理"},
-    {"role": "user", "content": "Short walk to reset—3 minutes down the hall. 放松 走动"},
-    {"role": "assistant", "content": "Walk with a slower cadence; exhale longer than inhale. 放松 节律"},
-    {"role": "user", "content": "Ready—code the parser function next. 专注 编码"},
-    {"role": "assistant", "content": "Define input/edge cases first; then TDD green. 专注 步骤化"},
-
-    # --- Cycle 5 ---
-    {"role": "user", "content": "Feeling pressured by stakeholder expectations. 焦虑 压力"},
-    {"role": "assistant", "content": "Pressure acknowledged; we’ll choose smallest viable slice. 同理 收敛"},
-    {"role": "user", "content": "Two-minute mindfulness: note sounds, temperature, posture. 放松 正念"},
-    {"role": "assistant", "content": "Label 3 external sensations, 2 internal sensations. 放松 觉察"},
-    {"role": "user", "content": "Focus: finalize the risk matrix. 专注 决策"},
-    {"role": "assistant", "content": "Complete top-5 risks; mark owners and deadlines. 执行 明确"},
-
-    # --- Cycle 6 ---
-    {"role": "user", "content": "Brain fog returning—can’t decide where to start. 焦虑 迟滞"},
-    {"role": "assistant", "content": "Tiny start: 60-second sketch of the intro. 微任务 拆解"},
-    {"role": "user", "content": "Before that, 4-7-8 breathing once. 放松 呼吸法"},
-    {"role": "assistant", "content": "Inhale 4, hold 7, exhale 8—repeat x2. 放松 生理安抚"},
-    {"role": "user", "content": "Focus window 30m: intro + summary bullets. 专注 时间盒"},
-    {"role": "assistant", "content": "I’ll guard the window; distractions parked in an ‘idea lot’. 专注 隔离干扰"},
-
-    # --- Cycle 7 ---
-    {"role": "user", "content": "Palms sweaty—calendar packed. 焦虑 超负荷"},
-    {"role": "assistant", "content": "We’ll protect one deep-work block; meetings trimmed. 边界 优化"},
-    {"role": "user", "content": "Quick foam-rolling and neck release. 放松 肌肉放松"},
-    {"role": "assistant", "content": "Slow pressure, breathe out on tender spots. 放松 指导"},
-    {"role": "user", "content": "Lock in on the data viz polish. 专注 打磨"},
-    {"role": "assistant", "content": "Define ‘done’: consistent scales, labels, legend order. 执行 验收标准"},
-
-    # --- Cycle 8 ---
-    {"role": "user", "content": "Rumination loop again—what if the demo fails? 焦虑 复燃"},
-    {"role": "assistant", "content": "We’ll pre-mortem in 3 lines, then return to tasks. 稳定 预案"},
-    {"role": "user", "content": "Calm tea + 90-second eyes-closed reset. 放松 休整"},
-    {"role": "assistant", "content": "Set a gentle timer; relax brow and shoulders. 放松 身心同步"},
-    {"role": "user", "content": "Focus: integrate examples and push the draft. 专注 合并 提交"},
-    {"role": "assistant", "content": "Pushed to branch; we’ll request review after unit tests. 执行 收尾"},
+    {"role": "assistant", "content": "Snooze notifications for 30m; anxiety noted."},
+    {"role": "user", "content": "Short walk to reset—3 minutes."},
+    {"role": "assistant", "content": "Walk with a slower cadence; exhale longer."},
+    {"role": "user", "content": "Ready—code the parser function next."},
+    {"role": "assistant", "content": "Define edge cases, then TDD green."},
 ]
 
 # ------------------------------
 # Demo run
 # ------------------------------
 if __name__ == "__main__":
-    P0_demo = {"O": 0.55, "C": 0.65, "E": 0.35, "A": 0.70, "N": 0.40}
+    # export LOGURU_LEVEL=DEBUG 可看到逐维细节
+    P0_demo = {"O": 0.55, "C": 0.65, "E": 0.35, "A": 0.30, "N": 0.40}
+
     llm = llmClient()
+
+    predictor = HeuristicMotivePredictor(
+        llm=llm,
+        beta=1.3,
+        use_global_factor_weight=True,
+        eps=0.15,           # ↓ 缩小死区，direction 更容易非零（你日志里很多维度本就很高）
+    )
+
     tracker = PersonaStateTracker(
         P0=P0_demo,
-        predictor=HeuristicMotivePredictor(
-            llm=llm, beta=2.5, use_global_factor_weight=True,
-        ),
-        delta_min=0.1, delta_max=0.5,
-        alpha_cap=0.75, lambda_reg=0.85,
-        cold_k=3, cold_bonus=0.5,
-        regression_scale=0.6, eps_near=0.05,
-        rng=random.Random(7)
+        predictor=predictor,
+
+        # 主动更新更敢
+        target_step=0.12,   # ↑ 单步目标位移（从 0.08 提到 0.12）
+        lambda_decay=0.80,  # ↑ 回归因子更慢衰，d_t 更大
+        alpha_cap=0.55,     # ↑ 放宽每轮最大权重
+
+        # Gate 放宽（你日志里 C/A/N 经常 m=0.75/0.88 但被冷却挡住）
+        gate_m_norm=0.20,   # ↓ 触发阈值降低
+        gate_min_dims=1,    # ↓ 只需一个维度满足即可
+        cooldown_k=1,       # ↓ 相邻轮也可再次更新
+
+        # 被动回归和漂移降到“背景噪声”级
+        passive_reg_alpha=0.02,  # ↓ 避免把主动变化吃回去
+        passive_reg_use_decay=True,
+        global_drift=0.005,      # ↓ 极小化末尾回归
     )
 
     traj = tracker.run_dialogue(dialogue)
+
     logger.info(json.dumps(traj, ensure_ascii=False, indent=2))
     df = tracker.to_dataframe()
-
     df.to_csv("persona_trajectory.csv", index=False, encoding="utf-8")
+
     with open("persona_turns.json", "w", encoding="utf-8") as f:
         json.dump([asdict(h) for h in tracker.history], f, ensure_ascii=False, indent=2)
 
@@ -306,10 +441,11 @@ if __name__ == "__main__":
     steps = list(range(len(traj)))
     for d in DIMENSIONS:
         plt.plot(steps, [state[d] for state in traj], label=d)
-    plt.title("Persona Trajectories over Dialogue Turns (Demo)")
-    plt.xlabel("Turn (t)")
+    plt.title("Persona Trajectories over Dialogue Turns (Gate + A/B/C Regressions)")
+    plt.xlabel("Turn (user-only)")
     plt.ylabel("Trait value")
     plt.legend()
     plt.tight_layout()
     plt.savefig("persona_trajectory.png", dpi=160)
     plt.close()
+
