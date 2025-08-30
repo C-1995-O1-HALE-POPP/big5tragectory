@@ -41,7 +41,7 @@ from threading import Semaphore
 # Constants & Heuristics
 # ------------------------------
 DIMENSIONS = ["O", "C", "E", "A", "N"]
-RPM_LIMIT = 300  
+RPM_LIMIT = 1200
 semaphore = Semaphore(RPM_LIMIT // 60)
 # 这些“提及度”用于构造全局权重 G（只在需要时使用）
 MENTIONS = {
