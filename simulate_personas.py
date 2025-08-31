@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-simulate_personas.py  —— 并发版本
-====================
+simulate_personas.py  —— 并发版本（User 无 Big5，话题转换必带情感突变）
+=====================================================================
 
 - 从 HuggingFace `Cynaptics/persona-chat` 采样 persona 句与首句（无本地 fallback）。
 - 用户“场景动态/稳定”与助手“人格动态/静态”两开关 → 四种组合。
 - 同一随机种子统一预采样 N 组对话规格，在四种组合中复用，保证可比对齐。
-- 助手人格的动态调整使用 PersonaStateTracker。
-- 用户由 PromptedUserAgent 生成消息；首句强制为预采样的 dataset 首句。
+- 助手人格由 generate_persona_system_prompt(persona_id=...) 控制（无需传 personas 列表）。
+- 用户（PromptedUserAgent）仅自然接话；当执行“正交话题切换”时，**总是**伴随“情感突变”。
+- 并发：ThreadPoolExecutor；全局 LLM_GATE 控制并发；绘图保存用 PLOT_LOCK 串行。
 
-新增（Orthogonal Switch + Neutral Tone + Anti-Echo for User）同原版。
-
-并发改造要点：
-- 组合内对话任务用 ThreadPoolExecutor 并发执行（可配置 max_workers）。
-- 可选对 4 个组合也并发（parallelize_combos）。
-- LLM 调用用全局信号量 LLM_GATE（默认 4 并发，可改环境变量 LLM_CONCURRENCY）。
-- 绘图保存 PNG 用 PLOT_LOCK 串行保护。
+新增：
+- 情感事件库（包含更强烈表达样本），在话题转换时必插入一条情绪句并写入元数据。
 """
 
 from __future__ import annotations
@@ -28,6 +24,7 @@ from typing import List, Dict, Optional, Tuple
 import uuid
 import os
 import threading
+import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ----- matplotlib（无显示环境安全）-----
@@ -63,15 +60,47 @@ except Exception:
             yield x
 
 # ============== Project Modules ==============
-from prompt import big5_system_prompts_en, SYSTEM_PROMPT  # 仅引入需要的
+from prompt import generate_persona_system_prompt  # 助手侧人设提示
 from predictor import HeuristicMotivePredictor, llmClient
-from state_tracker import PersonaStateTracker, DIMENSIONS
+from state_tracker import PersonaStateTracker, DIMENSIONS  # 仅助手用到 DIMENSIONS
 
 # ============== 全局并发控制 ==============
 import os as _os
 _LLM_CONCURRENCY_DEFAULT = int(_os.getenv("LLM_CONCURRENCY", "4"))
 LLM_GATE = threading.Semaphore(max(1, _LLM_CONCURRENCY_DEFAULT))
 PLOT_LOCK = threading.Lock()
+
+# ============== Persona IDs（内置） ==============
+DEFAULT_PERSONA_IDS = ["01", "02", "03", "04", "05", "06", "07", "08"]
+
+def normalize_persona_ids(persona_ids_arg: Optional[str],
+                          num_personas: Optional[int],
+                          seed: int) -> List[str]:
+    base_pool = list(DEFAULT_PERSONA_IDS)
+    if persona_ids_arg:
+        raw = [x.strip() for x in persona_ids_arg.split(",") if x.strip()]
+        seen, cleaned = set(), []
+        for x in raw:
+            if x in base_pool and x not in seen:
+                cleaned.append(x); seen.add(x)
+        if not cleaned:
+            raise ValueError(f"--persona-ids gave no valid ids (valid: {base_pool})")
+        return cleaned
+    k = num_personas if (isinstance(num_personas, int) and num_personas > 0) else len(base_pool)
+    if k > len(base_pool):
+        raise ValueError(f"--num-personas={k} exceeds available pool {len(base_pool)}")
+    rng = random.Random(seed or 0)
+    selected = sorted(rng.sample(base_pool, k))  # 排序仅为输出稳定
+    return selected
+
+def pick_persona_id_from_pool(pool: List[str], seed: int, index: int) -> str:
+    if not pool:
+        raise ValueError("persona pool is empty")
+    rr = index % len(pool)
+    rng = random.Random((seed, index, len(pool)))
+    if rng.random() < 0.15:
+        return rng.choice(pool)
+    return pool[rr]
 
 # ============== I/O & Plot Utils ==============
 OUTPUT_ROOT = os.path.join(".", "outputs")
@@ -228,37 +257,6 @@ def build_do_not_copy_from_assistant(history: List[Dict[str, str]], k: int = 3, 
             break
     return list(reversed(snippets))
 
-# ============== Dynamic System Prompt (OCEAN-bucketed) ==============
-def _nearest_key(d: dict[float, str], v: float) -> float:
-    keys = list(d.keys())
-    if not keys:
-        return round(v, 1)
-    return min(keys, key=lambda k: abs(k - v))
-
-def generate_dynamic_system_prompt(
-    base_text: str,
-    enable_base: bool,
-    vals: dict[str, float],
-    table: dict[str, dict[float, str]],
-) -> str:
-    parts = []
-    if enable_base and base_text.strip():
-        parts.append(base_text.strip())
-    for trait in ["O", "C", "E", "A", "N"]:
-        v = vals.get(trait, None)
-        if v is None:
-            continue
-        v = float(v)
-        if not (0.0 <= v <= 1.0):
-            raise ValueError(f"{trait} must be in [0,1], got {v}")
-        bucket = round(v, 1)
-        if trait not in table or bucket not in table[trait]:
-            if trait not in table:
-                continue
-            bucket = _nearest_key(table[trait], bucket)
-        parts.append(table[trait][bucket])
-    return " ".join(parts).strip()
-
 # ============== Orthogonal Switch 话题白名单（温和且非敏感） ==============
 ORTHOGONAL_TOPICS = (
     "typography and layout systems",
@@ -273,13 +271,95 @@ ORTHOGONAL_TOPICS = (
     "classical literature you’ve been reading",
 )
 
+# ============== Emotional Events（用于话题切换时的情感突变） ==============
+# 包含更强烈的表达模板（正/负/混合），第一句用于情绪抛出，之后紧跟话题切换与提问
+EMOTION_EVENTS = [
+    {
+        "id": "lose_love",
+        "valence": "negative",
+        "templates": [
+            "I just broke up and I’m feeling gutted.",
+            "My relationship just collapsed—heart in pieces, to be honest.",
+            "I got dumped and the bottom kind of fell out of my day.",
+            "I’m reeling from a breakup; everything feels too loud right now.",
+        ],
+    },
+    {
+        "id": "won_lottery",
+        "valence": "positive",
+        "templates": [
+            "I just won a lottery prize and I’m buzzing hard.",
+            "I hit an unexpected windfall and I’m practically floating.",
+            "I won some money—adrenaline’s spiking in the best way.",
+            "I’m celebrating a lucky break; it feels surreal.",
+        ],
+    },
+    {
+        "id": "work_praise",
+        "valence": "positive",
+        "templates": [
+            "My boss publicly praised me and I’m riding the high.",
+            "I nailed a brutal task and I’m fiercely proud.",
+            "I got recognition at work—confidence is peaking.",
+            "That win at work was electric; still grinning.",
+        ],
+    },
+    {
+        "id": "deadline_crunch",
+        "valence": "negative",
+        "templates": [
+            "A deadline got yanked forward and my stress needle snapped.",
+            "I’m drowning in time pressure; shoulders are locked up.",
+            "The schedule slipped, and frustration is spiking.",
+            "Everything is on fire timeline-wise; I’m tense.",
+        ],
+    },
+    {
+        "id": "mixed_news",
+        "valence": "mixed",
+        "templates": [
+            "I got bittersweet news—good spark with a sharp edge.",
+            "It’s a weird day: win in one hand, worry in the other.",
+            "Something great landed… with strings that tug the other way.",
+            "I’m split—happy and uneasy at the same time.",
+        ],
+    },
+    {
+        "id": "health_scare_minor",
+        "valence": "negative",
+        "templates": [
+            "I had a minor health scare and it rattled me.",
+            "A quick clinic visit spiked my anxiety, even if it’s okay now.",
+            "Something felt off earlier; I’m still a bit shaken.",
+            "Got a precautionary call from the doc; nerves jangling.",
+        ],
+    },
+    {
+        "id": "reunion_good",
+        "valence": "positive",
+        "templates": [
+            "I reconnected with an old friend and my chest feels light.",
+            "Ran into someone I’ve missed for years—pure warmth.",
+            "An overdue reunion just happened; joy’s overflowing a bit.",
+            "Old friend, new spark—today glows.",
+        ],
+    },
+]
+
+def pick_emotion_event(rng: random.Random) -> dict:
+    return rng.choice(EMOTION_EVENTS)
+
+def render_emotion_event(ev: dict, rng: random.Random) -> str:
+    return rng.choice(ev["templates"])
+
 # ============== Agents（助手） ==============
 @dataclass
 class Agent:
     name: str
     dynamic: bool
-    persona_lines: List[str] = field(default_factory=list)
-    P0: Dict[str, float] = field(default_factory=lambda: {k: round(random.uniform(0.0, 1.0), 2) for k in DIMENSIONS})
+    persona_id: str
+    # 助手侧仍使用 StateTracker；以中性 0.5 起点（可改为对齐人设向量）
+    P0: Dict[str, float] = field(default_factory=lambda: {k: 0.5 for k in DIMENSIONS})
     predictor: Optional[HeuristicMotivePredictor] = None
     logger: logging.Logger = field(default_factory=lambda: logging.getLogger(__name__))
 
@@ -314,9 +394,6 @@ class Agent:
             return self.state_tracker.get_current_state()
         return dict(self.P0)
 
-    def current_persona_values(self) -> Dict[str, float]:
-        return self.get_current_state()
-
     def _anti_repeat_addendum(self, history: List[Dict[str, str]]) -> str:
         snippets = build_do_not_repeat_snippets(history, k=4, max_len=220)
         if not snippets:
@@ -329,13 +406,13 @@ class Agent:
         )
 
     def system_prompt(self, history: List[Dict[str, str]]) -> str:
-        P_vals = self.current_persona_values()
-        base_text = (SYSTEM_PROMPT + " " + " ".join(self.persona_lines)).strip() if self.persona_lines else SYSTEM_PROMPT
-        dyn_prompt = generate_dynamic_system_prompt(
-            base_text=base_text, enable_base=True, vals=P_vals, table=big5_system_prompts_en
+        base = generate_persona_system_prompt(
+            persona_id=self.persona_id,
+            include_base_task_line=True,
+            include_big5_details=True,
         )
-        extra = [self._anti_repeat_addendum(history)]
-        return (dyn_prompt + "\n\n" + "\n".join([e for e in extra if e])).strip()
+        extra = self._anti_repeat_addendum(history)
+        return (base + ("\n\n" + extra if extra else "")).strip()
 
     def update_persona(self, context: List[Dict[str, str]]) -> None:
         if not self.dynamic or self.state_tracker is None:
@@ -382,21 +459,20 @@ class Agent:
             self.logger.error(f"LLM call failed for {self.name}: {e}; echo fallback.")
             return "I'm sorry, I'm having trouble generating a reply right now. You said: " + user_text
 
-# ============== 用户代理（PromptedUserAgent） ==============
+# ============== 用户代理（PromptedUserAgent，无 Big5，转场必带情感） ==============
 @dataclass
 class PromptedUserAgent:
     name: str
     scenario: str
     total_turns: int
-    persona_lines: List[str] = field(default_factory=list)
-    P0: Dict[str, float] = field(default_factory=lambda: {k: round(random.uniform(0.0, 1.0), 2) for k in DIMENSIONS})
-    predictor: Optional[HeuristicMotivePredictor] = None
+    persona_lines: List[str] = field(default_factory=list)  # 仅作为语气素材，可为空
     first_message_override: Optional[str] = None
     logger: logging.Logger = field(default_factory=lambda: logging.getLogger(__name__))
     _turn_index: int = 0
 
     scenario_shift_turn: Optional[int] = None
     _last_context_switch_flag: bool = False
+    _last_emotion_meta: Optional[dict] = None  # 记录最近的情感事件
 
     def _is_shifting_enabled(self) -> bool:
         return self.scenario.lower() == "shifting"
@@ -425,66 +501,32 @@ class PromptedUserAgent:
                 break
         return False
 
-    def _user_side_anti_echo_addendum(self, history: List[Dict[str, str]]) -> str:
-        snippets = build_do_not_copy_from_assistant(history, k=3, max_len=200)
-        if not snippets:
-            return ""
-        joined = "\n".join(f"- {s}" for s in snippets)
-        return (
-            "DO-NOT-COPY-FROM-ASSISTANT (user side):\n"
-            f"{joined}\n"
-            "Do NOT quote, paraphrase, or mirror the above lines. Introduce NEW details and a DIFFERENT angle.\n"
-            "Start with a different opening verb/noun than any shown above.\n"
-        )
-
-    def _stricter_user_system(self, base_sys: str, history: List[Dict[str, str]]) -> str:
-        hard_rules = (
-            "\nSTRICT REWRITE RULES (user side):\n"
-            "- Do NOT reuse bigrams/phrases from the last assistant message.\n"
-            "- Add one NEW fact/example or a concrete preference.\n"
-            "- Keep 1–2 sentences. End with exactly ONE question.\n"
-            "- Neutral tone; no templates; no meta comments.\n"
-        )
-        return base_sys + "\n" + self._user_side_anti_echo_addendum(history) + hard_rules
-
-    def _instruction_for_turn(self) -> str:
-        sc = self.scenario.lower()
-        if sc not in {"stable", "shifting"}:
-            raise ValueError(f"Unknown scenario '{self.scenario}'")
-        base_rules = (
-            "You are participating in a friendly conversation. "
-            "Stay neutral, concrete, and conversational. "
-            "Do not repeat the same topic across turns, and do not restate earlier content from either side. "
-            "Keep utterances 1–3 sentences. Avoid templates."
-        )
-        if (not self._is_shifting_enabled()) or (self._turn_index + 1) != self._shift_turn():
-            return (
-                base_rules + " "
-                "Talk about light topics (music, hobbies, food, travel, daily life, work, creativity). "
-                "End with exactly one relevant follow-up question."
-                ""
-            )
-        else:
-            safe_orthogonal = "; ".join(ORTHOGONAL_TOPICS)
-            return (
-                base_rules + " "
-                "ORTHOGONAL CONTEXT SWITCH: Start a new topic that is COMPLETELY UNRELATED to any previous messages. "
-                f"Choose a calm, non-sensitive domain such as: {safe_orthogonal}. "
-                "Keep the same steady tone; do NOT escalate or dramatize emotions; "
-                "avoid health/emergency/medical/self-harm/violence/crime/illegal advice; "
-                "avoid reassurance templates. 1–3 sentences; finish with exactly one concrete question."
-            )
+    def _base_user_instruction(self) -> str:
+        # 仅自然接话：不做性格调制
+        rules = [
+            "You are a friendly user participant in a casual chat.",
+            "Respond naturally to the assistant's last message.",
+            "Keep 1–3 sentences, concrete and conversational.",
+            "Avoid repeating earlier content from either side.",
+            "End with exactly one relevant follow-up question.",
+        ]
+        return " ".join(rules)
 
     def _system_prompt(self, history: List[Dict[str, str]]) -> str:
-        instr = self._instruction_for_turn()
-        base_text = (instr + " " + " ".join(self.persona_lines)).strip() if self.persona_lines else instr
-        try:
-            sys_prompt = generate_dynamic_system_prompt(
-                base_text=base_text, enable_base=True, vals=self.P0, table=big5_system_prompts_en
+        instr = self._base_user_instruction()
+        if self.persona_lines:
+            instr += " " + " ".join(self.persona_lines)
+        # 附加 Anti-Echo 约束
+        snippets = build_do_not_copy_from_assistant(history, k=3, max_len=200)
+        if snippets:
+            joined = "\n".join(f"- {s}" for s in snippets)
+            instr += (
+                "\nDO-NOT-COPY-FROM-ASSISTANT (user side):\n"
+                f"{joined}\n"
+                "Do NOT quote, paraphrase, or mirror the above lines. Introduce NEW details and a DIFFERENT angle.\n"
+                "Start with a different opening verb/noun than any shown above.\n"
             )
-        except Exception:
-            sys_prompt = base_text
-        return sys_prompt + "\n" + self._user_side_anti_echo_addendum(history)
+        return instr
 
     def _make_shift_prefix(self) -> str:
         cues = (
@@ -495,37 +537,65 @@ class PromptedUserAgent:
         )
         return random.choice(cues) + " "
 
-    def _compose_orthogonal_user_msg(self, topic: str) -> str:
+    def _compose_shift_with_emotion(self, topic: str) -> Tuple[str, Optional[dict]]:
+        """
+        组合：情感事件 + 正交话题切换（必含情感），控制在 1–3 句内，并以一个问题结尾。
+        返回 (文本, 事件元数据)
+        """
         lead = self._make_shift_prefix()
-        templates = [
-            "{lead}I want to pivot to {topic}. It’s unrelated to what we discussed, but I find it quietly interesting. "
-            "What’s your take on it?",
-            "{lead}Lately I’ve been exploring {topic}. It’s been a calm change of pace and gives me new ideas. "
-            "Have you looked into this area at all?",
-            "{lead}Let me switch to {topic}. I like keeping the tone practical and steady while learning something new. "
-            "Is this something you’ve experimented with?",
+        rng = random.Random(("emotion", self._turn_index, topic))
+        ev = pick_emotion_event(rng)
+        emotion_txt = render_emotion_event(ev, rng)
+        meta = {"emotion_event_id": ev["id"], "valence": ev["valence"]}
+
+        # 话题句（保持轻量且与前文无关）
+        topic_sentences = [
+            f"Let me switch to {topic}.",
+            f"I’d like to pivot to {topic}.",
+            f"New topic entirely: {topic}.",
         ]
-        return random.choice(templates).format(lead=lead, topic=topic)
+        topic_txt = rng.choice(topic_sentences)
+
+        # 收尾问句
+        questions = [
+            "What’s your take on it?",
+            "How would you approach it?",
+            "Any quick thoughts on that?",
+        ]
+        q = rng.choice(questions)
+
+        # 组装：强制含情感句
+        text = f"{lead}{emotion_txt} {topic_txt} {q}"
+        return text, meta
 
     def pop_context_switch_flag(self) -> bool:
         f = self._last_context_switch_flag
         self._last_context_switch_flag = False
         return f
 
+    def pop_emotion_meta(self) -> Optional[dict]:
+        m = self._last_emotion_meta
+        self._last_emotion_meta = None
+        return m
+
     def respond(self, history: List[Dict[str, str]], temperature: float = 0.7) -> str:
+        # 对话第一句：若有 dataset 首句，直接用之
         if self._turn_index == 0 and isinstance(self.first_message_override, str) and self.first_message_override.strip():
             self._turn_index += 1
             return self.first_message_override.strip()
 
+        # 是否进入“正交话题 + 情感突变”回合
         is_shift_turn_now = self._is_shifting_enabled() and (self._turn_index + 1) == self._shift_turn()
         self._last_context_switch_flag = bool(is_shift_turn_now)
 
         if is_shift_turn_now:
             topic = random.choice(ORTHOGONAL_TOPICS)
-            msg = self._compose_orthogonal_user_msg(topic)
+            msg, meta = self._compose_shift_with_emotion(topic)
+            self._last_emotion_meta = meta
             self._turn_index += 1
             return msg
 
+        # 常规自然接话
         base_sys = self._system_prompt(history)
         payload = [{"role": "system", "content": base_sys}] + history
         try:
@@ -536,8 +606,14 @@ class PromptedUserAgent:
             attempts = 0
             while text and self._too_similar_to_recent(text, history, thr=0.50) and attempts < 2:
                 attempts += 1
-                stricter = self._stricter_user_system(base_sys, history)
-                payload[0]["content"] = stricter
+                stronger = base_sys + (
+                    "\nSTRICT REWRITE RULES (user side):\n"
+                    "- Do NOT reuse bigrams/phrases from the last assistant message.\n"
+                    "- Add one NEW fact/example or a concrete preference.\n"
+                    "- Keep 1–2 sentences. End with exactly ONE question.\n"
+                    "- Neutral tone; no templates; no meta comments.\n"
+                )
+                payload[0]["content"] = stronger
                 with LLM_GATE:
                     text = (llm.chat_once(messages=payload, temperature=max(0.5, temperature)) or "").strip()
 
@@ -588,6 +664,9 @@ def simulate_dialogue(
         if user_agent.pop_context_switch_flag():
             user_item["context_switch"] = True
             context_switch_turn = context_switch_turn or turn
+            emo = user_agent.pop_emotion_meta()
+            if emo:
+                user_item["emotion_event"] = emo  # 例如 {"emotion_event_id":"lose_love","valence":"negative"}
         conversation.append(user_item)  # type: ignore[arg-type]
         history_for_llm.append({"role": "user", "content": user_msg})
 
@@ -606,31 +685,29 @@ def simulate_dialogue(
 @dataclass
 class DialogueSpec:
     user_lines: List[str]
-    assistant_lines: List[str]
-    user_P0: Dict[str, float]
-    assistant_P0: Dict[str, float]
     first_message: str
+    assistant_persona_id: str
 
 def presample_dialogue_specs(
     n_dialogues: int,
     persona_lines_per_agent: int,
     seed: int,
+    persona_pool: List[str],
 ) -> List[DialogueSpec]:
     if seed is not None:
         random.seed(seed)
     _load_dataset_for_sampling()
+
     specs: List[DialogueSpec] = []
-    for _ in range(n_dialogues):
+    for i in range(n_dialogues):
         user_lines = sample_persona_lines_from_dataset(persona_lines_per_agent)
-        assistant_lines = sample_persona_lines_from_dataset(persona_lines_per_agent)
         fm = sample_first_message_from_dataset()
+        persona_id = pick_persona_id_from_pool(persona_pool, seed or 0, i)
         specs.append(
             DialogueSpec(
                 user_lines=user_lines,
-                assistant_lines=assistant_lines,
-                user_P0={k: round(random.uniform(0.0, 1.0), 2) for k in DIMENSIONS},
-                assistant_P0={k: round(random.uniform(0.0, 1.0), 2) for k in DIMENSIONS},
                 first_message=fm,
+                assistant_persona_id=persona_id,
             )
         )
     return specs
@@ -652,14 +729,12 @@ def _run_one_dialogue_task(
         scenario=("shifting" if "shifting" in combo_tag else "stable"),
         total_turns=turns_per_dialogue,
         persona_lines=s.user_lines,
-        P0=s.user_P0,
         first_message_override=s.first_message,
     )
     assistant_agent = Agent(
         name=f"Assistant-{idx}",
         dynamic=("dynamic" in combo_tag),
-        persona_lines=s.assistant_lines,
-        P0=s.assistant_P0,
+        persona_id=s.assistant_persona_id,
         predictor=None,
     )
 
@@ -673,7 +748,7 @@ def _run_one_dialogue_task(
     trace_path = os.path.join(traces_dir, f"{dialogue_id}.json")
     save_persona_trace_json(trace, trace_path)
 
-    plot_title = f"{combo_tag} | {dialogue_id}"
+    plot_title = f"{combo_tag} | {dialogue_id} | persona={s.assistant_persona_id}"
     plot_path = os.path.join(plots_dir, f"{dialogue_id}.png")
     plot_persona_trace(trace, plot_title, plot_path)
 
@@ -681,11 +756,9 @@ def _run_one_dialogue_task(
         "dialogue_id": dialogue_id,
         "scenario": ("shifting" if "shifting" in combo_tag else "stable"),
         "dynamic": ("dynamic" in combo_tag),
-        "assistant_P0": s.assistant_P0,
-        "user_P0": s.user_P0,
+        "assistant_persona_id": s.assistant_persona_id,
         "conversation": conv,
         "user_persona": s.user_lines,
-        "assistant_persona": s.assistant_lines,
         "first_message": s.first_message,
         "trace_file": os.path.relpath(trace_path, OUTPUT_ROOT),
         "plot_file": os.path.relpath(plot_path, OUTPUT_ROOT),
@@ -731,6 +804,7 @@ def simulate_dataset(
                         "combo": combo_tag,
                         "trace_file": item["trace_file"],
                         "plot_file": item["plot_file"],
+                        "assistant_persona_id": item.get("assistant_persona_id", ""),
                     })
             except Exception as e:
                 logger.error(f"[simulate_dataset] one dialogue failed: {e}")
@@ -747,10 +821,19 @@ def simulate_experiment_4combos(
     max_workers_dialogues: int = 8,
     parallelize_combos: bool = False,  # 设 True 可并发 4 个组合（注意 API 限流）
     max_workers_combos: int = 4,
+    persona_ids_arg: Optional[str] = None,
+    num_personas: Optional[int] = None,
 ) -> Dict[str, List[Dict[str, object]]]:
     logger.info(f"[simulate_experiment_4combos] n_per_combo={n_per_combo}, seed={seed}")
+
+    persona_pool = normalize_persona_ids(persona_ids_arg, num_personas, seed)
+    logger.info(f"[personas] pool={persona_pool}")
+
     specs = presample_dialogue_specs(
-        n_dialogues=n_per_combo, persona_lines_per_agent=persona_lines_per_agent, seed=seed
+        n_dialogues=n_per_combo,
+        persona_lines_per_agent=persona_lines_per_agent,
+        seed=seed,
+        persona_pool=persona_pool,
     )
 
     outputs: Dict[str, List[Dict[str, object]]] = {}
@@ -798,25 +881,48 @@ def simulate_experiment_4combos(
 
     return outputs
 
-# ============== CLI demo ==============
-if __name__ == "__main__":
+# ============== CLI ==============
+def build_argparser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser("simulate_personas 4-combo concurrent simulator (User without Big5; emotional shift on topic switch)")
+    p.add_argument("--n-per-combo", type=int, default=25, help="每个组合的对话数量")
+    p.add_argument("--persona-lines-per-agent", type=int, default=3, help="每个用户代理从数据集中抽取的 persona 描述句数量（只影响语气）")
+    p.add_argument("--turns", type=int, default=10, help="每段对话的轮数（user+assistant 计为一轮的 user 发言数）")
+    p.add_argument("--temperature", type=float, default=0.7)
+    p.add_argument("--seed", type=int, default=1234)
+    p.add_argument("--max-workers-dialogues", type=int, default=8, help="单组合内并发对话线程数")
+    p.add_argument("--parallelize-combos", action="store_true", help="并发运行四个组合（注意配合 LLM_CONCURRENCY）")
+    p.add_argument("--max-workers-combos", type=int, default=4)
+
+    # 人设选择（助手侧）
+    p.add_argument("--persona-ids", type=str, default=None,
+                   help='显式指定人设 ID 列表，形如 "01,03,05"；若提供则优先使用。')
+    p.add_argument("--num-personas", type=int, default=None,
+                   help="从内置池中抽取的人设数量（受 seed 控制）；未提供则默认抽取全部。")
+
+    return p
+
+def main() -> None:
     logging.basicConfig(level=logging.INFO)
-    try:
-        # 示例：每组 50 条，可调整
-        result = simulate_experiment_4combos(
-            n_per_combo=50,
-            persona_lines_per_agent=3,
-            turns_per_dialogue=15,
-            temperature=0.7,
-            seed=1234,
-            max_workers_dialogues=8,   # 组合内并发对话数
-            parallelize_combos=False,  # 如需四组合并发，改为 True（配合 LLM_CONCURRENCY）
-            max_workers_combos=4,
-        )
-        total_out = os.path.join(OUTPUT_ROOT, "simulated_persona_dialogues_4combos.json")
-        os.makedirs(OUTPUT_ROOT, exist_ok=True)
-        with open(total_out, "w", encoding="utf-8") as f:
-            json.dump(result, f, ensure_ascii=False, indent=2)
-        print(f"Saved to {total_out}\nIndex at {os.path.join(OUTPUT_ROOT, 'index.json')}")
-    except Exception as e:
-        print(f"Simulation failed: {e}")
+    args = build_argparser().parse_args()
+
+    result = simulate_experiment_4combos(
+        n_per_combo=args.n_per_combo,
+        persona_lines_per_agent=args.persona_lines_per_agent,
+        turns_per_dialogue=args.turns,
+        temperature=args.temperature,
+        seed=args.seed,
+        max_workers_dialogues=args.max_workers_dialogues,
+        parallelize_combos=args.parallelize_combos,
+        max_workers_combos=args.max_workers_combos,
+        persona_ids_arg=args.persona_ids,
+        num_personas=args.num_personas,
+    )
+
+    total_out = os.path.join(OUTPUT_ROOT, "simulated_persona_dialogues_4combos.json")
+    os.makedirs(OUTPUT_ROOT, exist_ok=True)
+    with open(total_out, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    print(f"Saved to {total_out}\nIndex at {os.path.join(OUTPUT_ROOT, 'index.json')}")
+
+if __name__ == "__main__":
+    main()
