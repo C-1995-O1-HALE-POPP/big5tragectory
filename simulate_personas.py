@@ -8,6 +8,11 @@ simulate_personas.py
 - 同一个随机种子先统一预采样 50 组对话规格，在四种组合中复用，保证可比对齐。
 - 助手人格的动态调整使用 PersonaStateTracker。
 - 用户由 PromptedUserAgent 生成消息（稳定/转场），首句强制为预采样的 dataset 首句。
+
+新增特性：
+- 为每次对话生成 uuid（四种组合各自独立）。
+- 逐回合记录助手人格 OCEAN 轨迹并导出到独立 JSON 文件。
+- 为每次对话绘制一张人格维度波动图（PNG）。
 """
 
 from __future__ import annotations
@@ -17,9 +22,15 @@ import random
 import logging
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple, Iterable
-
+import uuid
 import os
 from math import isfinite
+
+# ----- matplotlib（无显示环境安全）-----
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
 from datasets import load_dataset  # must be available
 
 # ============== Logging & Progress ==============
@@ -49,9 +60,58 @@ except Exception:
 
 
 # ============== Project Modules ==============
-from prompt import big5_system_prompts_en, SYSTEM_PROMPT, generate_system_prompt  # noqa: F401 (generate_system_prompt unused)
+from prompt import big5_system_prompts_en, SYSTEM_PROMPT, generate_system_prompt  # noqa: F401
 from predictor import HeuristicMotivePredictor, llmClient
 from state_tracker import PersonaStateTracker, DIMENSIONS
+
+
+# ============== I/O & Plot Utils ==============
+OUTPUT_ROOT = os.path.join(".", "outputs")
+PLOTS_DIR = os.path.join(OUTPUT_ROOT, "persona_plots")
+TRACES_DIR = os.path.join(OUTPUT_ROOT, "persona_traces")
+os.makedirs(PLOTS_DIR, exist_ok=True)
+os.makedirs(TRACES_DIR, exist_ok=True)
+
+def _ensure_dirs_for_combo(combo_tag: str) -> Tuple[str, str]:
+    """Return (plots_subdir, traces_subdir) for a combo, ensuring creation."""
+    plots = os.path.join(PLOTS_DIR, combo_tag)
+    traces = os.path.join(TRACES_DIR, combo_tag)
+    os.makedirs(plots, exist_ok=True)
+    os.makedirs(traces, exist_ok=True)
+    return plots, traces
+
+def save_persona_trace_json(trace: List[Dict[str, float]], out_path: str) -> None:
+    """Save per-turn OCEAN trace to JSON: [{'t': 1, 'O':..,'C':..,'E':..,'A':..,'N':..}, ...]."""
+    try:
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(trace, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"[trace] failed to save {out_path}: {e}")
+
+def plot_persona_trace(trace: List[Dict[str, float]], title: str, out_path: str) -> None:
+    """Plot OCEAN over turns; one line per trait."""
+    if not trace:
+        logger.error(f"[plot] empty trace for {out_path}")
+        return
+    ts = [d["t"] for d in trace]
+    plt.figure(figsize=(9, 5))
+    for dim in DIMENSIONS:
+        ys = [d[dim] for d in trace]
+        plt.plot(ts, ys, label=dim, linewidth=2)
+    plt.ylim(-0.05, 1.05)
+    plt.xlim(min(ts), max(ts))
+    plt.xlabel("Turn", fontsize=11)
+    plt.ylabel("Trait value (0–1)", fontsize=11)
+    plt.title(title, fontsize=12)
+    plt.grid(True, alpha=0.3)
+    plt.legend(loc="best", ncol=5, frameon=False)
+    plt.tight_layout()
+    try:
+        plt.savefig(out_path, dpi=180)
+    except Exception as e:
+        logger.error(f"[plot] failed to save {out_path}: {e}")
+    finally:
+        plt.close()
 
 
 # ============== Dataset Loading (NO FALLBACK) ==============
@@ -192,23 +252,33 @@ class Agent:
             self.state_tracker = PersonaStateTracker(
                 P0=self.P0,
                 predictor=self.predictor,
-                target_step=0.25,
-                lambda_decay=0.80,
-                alpha_cap=0.55,
-                gate_m_norm=0.20,
-                gate_min_dims=1,
-                cooldown_k=2,
-                passive_reg_alpha=0.02,
+
+                # 主动更新更敢
+                target_step=0.12,   # ↑ 单步目标位移（从 0.08 提到 0.12）
+                lambda_decay=0.80,  # ↑ 回归因子更慢衰，d_t 更大
+                alpha_cap=0.55,     # ↑ 放宽每轮最大权重
+
+                # Gate 放宽（你日志里 C/A/N 经常 m=0.75/0.88 但被冷却挡住）
+                gate_m_norm=0.20,   # ↓ 触发阈值降低
+                gate_min_dims=1,    # ↓ 只需一个维度满足即可
+                cooldown_k=1,       # ↓ 相邻轮也可再次更新
+
+                # 被动回归和漂移降到“背景噪声”级
+                passive_reg_alpha=0.02,  # ↓ 避免把主动变化吃回去
                 passive_reg_use_decay=True,
-                global_drift=0.005,
+                global_drift=0.005,      # ↓ 极小化末尾回归
+
             )
         else:
             self.state_tracker = None
 
-    def current_persona_values(self) -> Dict[str, float]:
+    def get_current_state(self) -> Dict[str, float]:
         if self.dynamic and self.state_tracker is not None:
             return self.state_tracker.get_current_state()
         return dict(self.P0)
+
+    def current_persona_values(self) -> Dict[str, float]:
+        return self.get_current_state()
 
     def system_prompt(self) -> str:
         P_vals = self.current_persona_values()
@@ -330,21 +400,35 @@ def simulate_dialogue(
     assistant_agent: Agent,
     num_turns: int = 15,
     temperature: float = 0.7,
-) -> List[Dict[str, str]]:
+) -> Tuple[List[Dict[str, str]], List[Dict[str, float]]]:
+    """
+    返回:
+      conversation: [{'role':..,'content':..}, ...]
+      persona_trace: [{'t':1,'O':..,'C':..,'E':..,'A':..,'N':..}, ...]  # 每个助手回合一次
+    """
     conversation: List[Dict[str, str]] = []
     history_for_llm: List[Dict[str, str]] = []
-    for _ in range(num_turns):
+    persona_trace: List[Dict[str, float]] = []
+
+    for turn in range(1, num_turns + 1):
         # user
         user_msg = user_agent.respond(history_for_llm.copy(), temperature=temperature)
         conversation.append({"role": "user", "content": user_msg})
         history_for_llm.append({"role": "user", "content": user_msg})
-        # update assistant persona
+
+        # assistant persona update (使用最新上下文进行一次 step)
         assistant_agent.update_persona(history_for_llm.copy())
-        # assistant
+
+        # 记录此回合用于生成回复时的当前人格（即更新后）
+        cur = assistant_agent.get_current_state()
+        persona_trace.append({"t": turn, **{k: float(cur[k]) for k in DIMENSIONS}})
+
+        # assistant reply
         reply = assistant_agent.respond(history_for_llm.copy(), temperature=temperature)
         conversation.append({"role": "assistant", "content": reply})
         history_for_llm.append({"role": "assistant", "content": reply})
-    return conversation
+
+    return conversation, persona_trace
 
 
 # ============== Specs Pre-sampling (same seed across 4 combos) ==============
@@ -389,13 +473,22 @@ def simulate_dataset(
     use_dynamic_persona: bool,      # False → static assistant; True → dynamic assistant
     turns_per_dialogue: int = 15,
     temperature: float = 0.7,
+    combo_tag: str = "stable_static",
+    index_accumulator: List[Dict[str, str]] | None = None,
 ) -> List[Dict[str, object]]:
-    """Run a dataset for one specific (scenario, persona) condition."""
+    """Run a dataset for one specific (scenario, persona) condition. 额外执行：保存轨迹 & 绘图。"""
     results: List[Dict[str, object]] = []
     scenario = "shifting" if use_dynamic_scenario else "stable"
     logger.info(f"[simulate_dataset] scenario={scenario}, assistant_dynamic={use_dynamic_persona}, count={len(specs)}")
-    for idx, spec in enumerate(tqdm(range(len(specs)), total=len(specs), desc=f"{scenario}|{'dyn' if use_dynamic_persona else 'static'}")):
+
+    plots_dir, traces_dir = _ensure_dirs_for_combo(combo_tag)
+
+    for idx, _ in enumerate(tqdm(range(len(specs)), total=len(specs), desc=f"{scenario}|{'dyn' if use_dynamic_persona else 'static'}")):
         s = specs[idx]
+        # 对话级 uuid（四种组合内各自独立）
+        dialogue_id = str(uuid.uuid4())
+
+        # user
         user_agent = PromptedUserAgent(
             name=f"User-{idx}",
             scenario=scenario,
@@ -410,15 +503,29 @@ def simulate_dataset(
             dynamic=use_dynamic_persona,
             persona_lines=s.assistant_lines,
             P0=s.assistant_P0,
-            predictor=None if use_dynamic_persona else None,  # let Agent build llm/predictor when dynamic
+            predictor=None if use_dynamic_persona else None,  # 让 Agent 在 dynamic=True 时自行构建 predictor
         )
-        conv = simulate_dialogue(
+
+        # simulate
+        conv, trace = simulate_dialogue(
             user_agent=user_agent,
             assistant_agent=assistant_agent,
             num_turns=turns_per_dialogue,
             temperature=temperature,
         )
-        results.append({
+
+        # 保存轨迹 JSON（单条对话一个文件）
+        trace_path = os.path.join(traces_dir, f"{dialogue_id}.json")
+        save_persona_trace_json(trace, trace_path)
+
+        # 绘图 PNG（单条对话一张图）
+        plot_title = f"{combo_tag} | {dialogue_id}"
+        plot_path = os.path.join(plots_dir, f"{dialogue_id}.png")
+        plot_persona_trace(trace, plot_title, plot_path)
+
+        # 结果条目（含 uuid 与文件路径，路径相对 outputs/ 便于移植）
+        result_item = {
+            "dialogue_id": dialogue_id,
             "scenario": scenario,
             "dynamic": use_dynamic_persona,
             "assistant_P0": s.assistant_P0,
@@ -427,7 +534,20 @@ def simulate_dataset(
             "user_persona": s.user_lines,
             "assistant_persona": s.assistant_lines,
             "first_message": s.first_message,
-        })
+            "trace_file": os.path.relpath(trace_path, OUTPUT_ROOT),
+            "plot_file": os.path.relpath(plot_path, OUTPUT_ROOT),
+        }
+        results.append(result_item)
+
+        # 记录到全局索引
+        if index_accumulator is not None:
+            index_accumulator.append({
+                "dialogue_id": dialogue_id,
+                "combo": combo_tag,
+                "trace_file": result_item["trace_file"],
+                "plot_file": result_item["plot_file"],
+            })
+
     return results
 
 
@@ -459,6 +579,10 @@ def simulate_experiment_4combos(
         ("shifting_static", True,  False),
         ("shifting_dynamic",True,  True),
     ]
+
+    # 索引累积器（输出到 outputs/index.json）
+    index_records: List[Dict[str, str]] = []
+
     for tag, sc_flag, dyn_flag in combos:
         outputs[tag] = simulate_dataset(
             specs=specs,
@@ -466,7 +590,17 @@ def simulate_experiment_4combos(
             use_dynamic_persona=dyn_flag,
             turns_per_dialogue=turns_per_dialogue,
             temperature=temperature,
+            combo_tag=tag,
+            index_accumulator=index_records,
         )
+
+    # 将索引写入 outputs/index.json（方便快速浏览）
+    try:
+        with open(os.path.join(OUTPUT_ROOT, "index.json"), "w", encoding="utf-8") as f:
+            json.dump(index_records, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"[index] failed to save outputs/index.json: {e}")
+
     return outputs
 
 
@@ -482,9 +616,11 @@ if __name__ == "__main__":
             temperature=0.7,
             seed=1234,  # 固定随机种子 → 四组共享相同预采样
         )
-        # 导出
-        with open("simulated_persona_dialogues_4combos.json", "w", encoding="utf-8") as f:
+        # 导出总结果（保持原路径习惯，但移动到 outputs/ 目录下更整洁）
+        total_out = os.path.join(OUTPUT_ROOT, "simulated_persona_dialogues_4combos.json")
+        os.makedirs(OUTPUT_ROOT, exist_ok=True)
+        with open(total_out, "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
-        print("Saved to simulated_persona_dialogues_4combos.json")
+        print(f"Saved to {total_out}\nIndex at {os.path.join(OUTPUT_ROOT, 'index.json')}")
     except Exception as e:
         print(f"Simulation failed: {e}")

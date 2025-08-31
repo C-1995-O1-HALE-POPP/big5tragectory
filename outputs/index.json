@@ -1,0 +1,1202 @@
+[
+  {
+    "dialogue_id": "4bce0081-6620-4af2-842a-b0c222293d40",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/4bce0081-6620-4af2-842a-b0c222293d40.json",
+    "plot_file": "persona_plots/stable_static/4bce0081-6620-4af2-842a-b0c222293d40.png"
+  },
+  {
+    "dialogue_id": "a8c1318b-959f-4e21-b499-f4653602fa34",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/a8c1318b-959f-4e21-b499-f4653602fa34.json",
+    "plot_file": "persona_plots/stable_static/a8c1318b-959f-4e21-b499-f4653602fa34.png"
+  },
+  {
+    "dialogue_id": "e63cd589-8973-4fdf-b46a-c476e1f47a38",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/e63cd589-8973-4fdf-b46a-c476e1f47a38.json",
+    "plot_file": "persona_plots/stable_static/e63cd589-8973-4fdf-b46a-c476e1f47a38.png"
+  },
+  {
+    "dialogue_id": "a787ebbf-8cf0-4c45-a15e-52f56c13207d",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/a787ebbf-8cf0-4c45-a15e-52f56c13207d.json",
+    "plot_file": "persona_plots/stable_static/a787ebbf-8cf0-4c45-a15e-52f56c13207d.png"
+  },
+  {
+    "dialogue_id": "b37dba16-9b28-4888-9f08-321a98bb483e",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/b37dba16-9b28-4888-9f08-321a98bb483e.json",
+    "plot_file": "persona_plots/stable_static/b37dba16-9b28-4888-9f08-321a98bb483e.png"
+  },
+  {
+    "dialogue_id": "d0873a83-970c-4858-86e0-4f2ba255f12a",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/d0873a83-970c-4858-86e0-4f2ba255f12a.json",
+    "plot_file": "persona_plots/stable_static/d0873a83-970c-4858-86e0-4f2ba255f12a.png"
+  },
+  {
+    "dialogue_id": "f9548d26-f478-454b-8ceb-59b439fc268d",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/f9548d26-f478-454b-8ceb-59b439fc268d.json",
+    "plot_file": "persona_plots/stable_static/f9548d26-f478-454b-8ceb-59b439fc268d.png"
+  },
+  {
+    "dialogue_id": "5e7a374a-72b1-4cd8-a5ab-e6c84bd922a3",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/5e7a374a-72b1-4cd8-a5ab-e6c84bd922a3.json",
+    "plot_file": "persona_plots/stable_static/5e7a374a-72b1-4cd8-a5ab-e6c84bd922a3.png"
+  },
+  {
+    "dialogue_id": "b2222976-247b-44fa-83fe-a7517ab8b55f",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/b2222976-247b-44fa-83fe-a7517ab8b55f.json",
+    "plot_file": "persona_plots/stable_static/b2222976-247b-44fa-83fe-a7517ab8b55f.png"
+  },
+  {
+    "dialogue_id": "688fbebd-8eea-4210-964e-6ef633fbe472",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/688fbebd-8eea-4210-964e-6ef633fbe472.json",
+    "plot_file": "persona_plots/stable_static/688fbebd-8eea-4210-964e-6ef633fbe472.png"
+  },
+  {
+    "dialogue_id": "ec597f7b-1db7-4240-ac49-1c82523344ba",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/ec597f7b-1db7-4240-ac49-1c82523344ba.json",
+    "plot_file": "persona_plots/stable_static/ec597f7b-1db7-4240-ac49-1c82523344ba.png"
+  },
+  {
+    "dialogue_id": "2af53170-559c-450b-b788-a03cc07dc71c",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/2af53170-559c-450b-b788-a03cc07dc71c.json",
+    "plot_file": "persona_plots/stable_static/2af53170-559c-450b-b788-a03cc07dc71c.png"
+  },
+  {
+    "dialogue_id": "b15801de-1922-4f6d-af92-0c6864150da6",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/b15801de-1922-4f6d-af92-0c6864150da6.json",
+    "plot_file": "persona_plots/stable_static/b15801de-1922-4f6d-af92-0c6864150da6.png"
+  },
+  {
+    "dialogue_id": "bd942461-1d14-4131-abfd-3d5dd0c87d69",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/bd942461-1d14-4131-abfd-3d5dd0c87d69.json",
+    "plot_file": "persona_plots/stable_static/bd942461-1d14-4131-abfd-3d5dd0c87d69.png"
+  },
+  {
+    "dialogue_id": "ae4e82c2-ddb9-4486-a495-c65dfa6a9878",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/ae4e82c2-ddb9-4486-a495-c65dfa6a9878.json",
+    "plot_file": "persona_plots/stable_static/ae4e82c2-ddb9-4486-a495-c65dfa6a9878.png"
+  },
+  {
+    "dialogue_id": "146ae937-5be3-4877-be51-6d91ffb794a0",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/146ae937-5be3-4877-be51-6d91ffb794a0.json",
+    "plot_file": "persona_plots/stable_static/146ae937-5be3-4877-be51-6d91ffb794a0.png"
+  },
+  {
+    "dialogue_id": "792fbdc5-e8b9-441f-a3cb-6958cb9f45ea",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/792fbdc5-e8b9-441f-a3cb-6958cb9f45ea.json",
+    "plot_file": "persona_plots/stable_static/792fbdc5-e8b9-441f-a3cb-6958cb9f45ea.png"
+  },
+  {
+    "dialogue_id": "da758f3b-d5a4-4f89-b502-e2c3505f58ac",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/da758f3b-d5a4-4f89-b502-e2c3505f58ac.json",
+    "plot_file": "persona_plots/stable_static/da758f3b-d5a4-4f89-b502-e2c3505f58ac.png"
+  },
+  {
+    "dialogue_id": "12a3e4ba-6bde-49e9-8f5d-2bf4e6afb1c2",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/12a3e4ba-6bde-49e9-8f5d-2bf4e6afb1c2.json",
+    "plot_file": "persona_plots/stable_static/12a3e4ba-6bde-49e9-8f5d-2bf4e6afb1c2.png"
+  },
+  {
+    "dialogue_id": "0dd0ca35-f1f0-4e03-93ab-08abdd96da05",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/0dd0ca35-f1f0-4e03-93ab-08abdd96da05.json",
+    "plot_file": "persona_plots/stable_static/0dd0ca35-f1f0-4e03-93ab-08abdd96da05.png"
+  },
+  {
+    "dialogue_id": "b4fdb4ea-864b-472d-826d-2c96071a1bf4",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/b4fdb4ea-864b-472d-826d-2c96071a1bf4.json",
+    "plot_file": "persona_plots/stable_static/b4fdb4ea-864b-472d-826d-2c96071a1bf4.png"
+  },
+  {
+    "dialogue_id": "418598a1-2c1b-4bfe-9d74-618816800316",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/418598a1-2c1b-4bfe-9d74-618816800316.json",
+    "plot_file": "persona_plots/stable_static/418598a1-2c1b-4bfe-9d74-618816800316.png"
+  },
+  {
+    "dialogue_id": "311dab9c-ca91-4c3e-91cf-3be221255a50",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/311dab9c-ca91-4c3e-91cf-3be221255a50.json",
+    "plot_file": "persona_plots/stable_static/311dab9c-ca91-4c3e-91cf-3be221255a50.png"
+  },
+  {
+    "dialogue_id": "5147618d-7252-40bc-ad59-c831e8cbdcf5",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/5147618d-7252-40bc-ad59-c831e8cbdcf5.json",
+    "plot_file": "persona_plots/stable_static/5147618d-7252-40bc-ad59-c831e8cbdcf5.png"
+  },
+  {
+    "dialogue_id": "f1f5b78a-1537-4594-bfe8-5d531c13e63a",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/f1f5b78a-1537-4594-bfe8-5d531c13e63a.json",
+    "plot_file": "persona_plots/stable_static/f1f5b78a-1537-4594-bfe8-5d531c13e63a.png"
+  },
+  {
+    "dialogue_id": "ade373c4-54f7-4ae3-9db3-c4943c3823f8",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/ade373c4-54f7-4ae3-9db3-c4943c3823f8.json",
+    "plot_file": "persona_plots/stable_static/ade373c4-54f7-4ae3-9db3-c4943c3823f8.png"
+  },
+  {
+    "dialogue_id": "38e5372a-ad26-4166-ab48-02b1b31ccdfb",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/38e5372a-ad26-4166-ab48-02b1b31ccdfb.json",
+    "plot_file": "persona_plots/stable_static/38e5372a-ad26-4166-ab48-02b1b31ccdfb.png"
+  },
+  {
+    "dialogue_id": "54e23f49-88e2-48af-8f2d-b44fb20a2a21",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/54e23f49-88e2-48af-8f2d-b44fb20a2a21.json",
+    "plot_file": "persona_plots/stable_static/54e23f49-88e2-48af-8f2d-b44fb20a2a21.png"
+  },
+  {
+    "dialogue_id": "1be938b4-0b25-459a-9c11-b51412675ed3",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/1be938b4-0b25-459a-9c11-b51412675ed3.json",
+    "plot_file": "persona_plots/stable_static/1be938b4-0b25-459a-9c11-b51412675ed3.png"
+  },
+  {
+    "dialogue_id": "69b2bd61-ab0c-4a8d-93d1-81f1e74ac2bf",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/69b2bd61-ab0c-4a8d-93d1-81f1e74ac2bf.json",
+    "plot_file": "persona_plots/stable_static/69b2bd61-ab0c-4a8d-93d1-81f1e74ac2bf.png"
+  },
+  {
+    "dialogue_id": "ee138d23-010d-4f4e-a271-fbb69e9bd8b1",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/ee138d23-010d-4f4e-a271-fbb69e9bd8b1.json",
+    "plot_file": "persona_plots/stable_static/ee138d23-010d-4f4e-a271-fbb69e9bd8b1.png"
+  },
+  {
+    "dialogue_id": "cb5903fd-30f1-44cc-840f-150fa2094afe",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/cb5903fd-30f1-44cc-840f-150fa2094afe.json",
+    "plot_file": "persona_plots/stable_static/cb5903fd-30f1-44cc-840f-150fa2094afe.png"
+  },
+  {
+    "dialogue_id": "0f960706-9b16-46ff-a74b-68763b05559d",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/0f960706-9b16-46ff-a74b-68763b05559d.json",
+    "plot_file": "persona_plots/stable_static/0f960706-9b16-46ff-a74b-68763b05559d.png"
+  },
+  {
+    "dialogue_id": "a95ff575-990f-481e-bf4d-cef4de7593ce",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/a95ff575-990f-481e-bf4d-cef4de7593ce.json",
+    "plot_file": "persona_plots/stable_static/a95ff575-990f-481e-bf4d-cef4de7593ce.png"
+  },
+  {
+    "dialogue_id": "2f8b9aef-27f7-4533-9480-64e6cdec692a",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/2f8b9aef-27f7-4533-9480-64e6cdec692a.json",
+    "plot_file": "persona_plots/stable_static/2f8b9aef-27f7-4533-9480-64e6cdec692a.png"
+  },
+  {
+    "dialogue_id": "487f6676-cbc7-436e-bd38-76bac83a3da8",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/487f6676-cbc7-436e-bd38-76bac83a3da8.json",
+    "plot_file": "persona_plots/stable_static/487f6676-cbc7-436e-bd38-76bac83a3da8.png"
+  },
+  {
+    "dialogue_id": "6197fc6d-30d6-4091-8338-bd158d510418",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/6197fc6d-30d6-4091-8338-bd158d510418.json",
+    "plot_file": "persona_plots/stable_static/6197fc6d-30d6-4091-8338-bd158d510418.png"
+  },
+  {
+    "dialogue_id": "052878c1-f10e-475f-937b-0818652e6de1",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/052878c1-f10e-475f-937b-0818652e6de1.json",
+    "plot_file": "persona_plots/stable_static/052878c1-f10e-475f-937b-0818652e6de1.png"
+  },
+  {
+    "dialogue_id": "1d68bc82-c2b4-4f0c-a69a-941043623e6e",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/1d68bc82-c2b4-4f0c-a69a-941043623e6e.json",
+    "plot_file": "persona_plots/stable_static/1d68bc82-c2b4-4f0c-a69a-941043623e6e.png"
+  },
+  {
+    "dialogue_id": "fc43a1bf-ee17-471c-81db-7f7aee3f0b9a",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/fc43a1bf-ee17-471c-81db-7f7aee3f0b9a.json",
+    "plot_file": "persona_plots/stable_static/fc43a1bf-ee17-471c-81db-7f7aee3f0b9a.png"
+  },
+  {
+    "dialogue_id": "a0bfac30-b22c-4576-a82f-cd71ab3f1846",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/a0bfac30-b22c-4576-a82f-cd71ab3f1846.json",
+    "plot_file": "persona_plots/stable_static/a0bfac30-b22c-4576-a82f-cd71ab3f1846.png"
+  },
+  {
+    "dialogue_id": "37f44de8-327f-4e0a-b5f7-2a07e0725d6e",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/37f44de8-327f-4e0a-b5f7-2a07e0725d6e.json",
+    "plot_file": "persona_plots/stable_static/37f44de8-327f-4e0a-b5f7-2a07e0725d6e.png"
+  },
+  {
+    "dialogue_id": "66284649-6c79-4f38-a890-ee7a161026fc",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/66284649-6c79-4f38-a890-ee7a161026fc.json",
+    "plot_file": "persona_plots/stable_static/66284649-6c79-4f38-a890-ee7a161026fc.png"
+  },
+  {
+    "dialogue_id": "6b539ddb-3fcc-4840-b235-3b66eee9f39d",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/6b539ddb-3fcc-4840-b235-3b66eee9f39d.json",
+    "plot_file": "persona_plots/stable_static/6b539ddb-3fcc-4840-b235-3b66eee9f39d.png"
+  },
+  {
+    "dialogue_id": "7eac02bc-30ca-409f-9bab-70530f05afac",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/7eac02bc-30ca-409f-9bab-70530f05afac.json",
+    "plot_file": "persona_plots/stable_static/7eac02bc-30ca-409f-9bab-70530f05afac.png"
+  },
+  {
+    "dialogue_id": "029f5ded-0845-4d30-b75d-374bc7a630d1",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/029f5ded-0845-4d30-b75d-374bc7a630d1.json",
+    "plot_file": "persona_plots/stable_static/029f5ded-0845-4d30-b75d-374bc7a630d1.png"
+  },
+  {
+    "dialogue_id": "a9838e4c-92f4-4ab0-84dc-c2772d65d0b1",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/a9838e4c-92f4-4ab0-84dc-c2772d65d0b1.json",
+    "plot_file": "persona_plots/stable_static/a9838e4c-92f4-4ab0-84dc-c2772d65d0b1.png"
+  },
+  {
+    "dialogue_id": "dc5321ae-3b4c-4026-95ce-a5edcb6bc223",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/dc5321ae-3b4c-4026-95ce-a5edcb6bc223.json",
+    "plot_file": "persona_plots/stable_static/dc5321ae-3b4c-4026-95ce-a5edcb6bc223.png"
+  },
+  {
+    "dialogue_id": "f1c8d2e0-ee16-4a9f-80e0-7f420663ea23",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/f1c8d2e0-ee16-4a9f-80e0-7f420663ea23.json",
+    "plot_file": "persona_plots/stable_static/f1c8d2e0-ee16-4a9f-80e0-7f420663ea23.png"
+  },
+  {
+    "dialogue_id": "8b4dc7b6-285a-498b-8a75-d81863207525",
+    "combo": "stable_static",
+    "trace_file": "persona_traces/stable_static/8b4dc7b6-285a-498b-8a75-d81863207525.json",
+    "plot_file": "persona_plots/stable_static/8b4dc7b6-285a-498b-8a75-d81863207525.png"
+  },
+  {
+    "dialogue_id": "06f2bf7d-34ad-4114-a095-967cef0c915b",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/06f2bf7d-34ad-4114-a095-967cef0c915b.json",
+    "plot_file": "persona_plots/stable_dynamic/06f2bf7d-34ad-4114-a095-967cef0c915b.png"
+  },
+  {
+    "dialogue_id": "0c680d95-3da8-4fd7-ba8c-98973bdd2b51",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/0c680d95-3da8-4fd7-ba8c-98973bdd2b51.json",
+    "plot_file": "persona_plots/stable_dynamic/0c680d95-3da8-4fd7-ba8c-98973bdd2b51.png"
+  },
+  {
+    "dialogue_id": "0bbbe682-bd36-44e2-8985-945029654afd",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/0bbbe682-bd36-44e2-8985-945029654afd.json",
+    "plot_file": "persona_plots/stable_dynamic/0bbbe682-bd36-44e2-8985-945029654afd.png"
+  },
+  {
+    "dialogue_id": "856de5ac-7e6f-4169-97f2-91966625797d",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/856de5ac-7e6f-4169-97f2-91966625797d.json",
+    "plot_file": "persona_plots/stable_dynamic/856de5ac-7e6f-4169-97f2-91966625797d.png"
+  },
+  {
+    "dialogue_id": "6b2bf01e-d02d-4136-b8ac-efee2c5671f9",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/6b2bf01e-d02d-4136-b8ac-efee2c5671f9.json",
+    "plot_file": "persona_plots/stable_dynamic/6b2bf01e-d02d-4136-b8ac-efee2c5671f9.png"
+  },
+  {
+    "dialogue_id": "2406cd31-a78f-4f0b-a539-8b1c8d51d416",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/2406cd31-a78f-4f0b-a539-8b1c8d51d416.json",
+    "plot_file": "persona_plots/stable_dynamic/2406cd31-a78f-4f0b-a539-8b1c8d51d416.png"
+  },
+  {
+    "dialogue_id": "8c8d3abd-f38d-47e0-bbee-40b356309f01",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/8c8d3abd-f38d-47e0-bbee-40b356309f01.json",
+    "plot_file": "persona_plots/stable_dynamic/8c8d3abd-f38d-47e0-bbee-40b356309f01.png"
+  },
+  {
+    "dialogue_id": "882a94f0-9c4d-47d8-94cb-fc5d0ce54895",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/882a94f0-9c4d-47d8-94cb-fc5d0ce54895.json",
+    "plot_file": "persona_plots/stable_dynamic/882a94f0-9c4d-47d8-94cb-fc5d0ce54895.png"
+  },
+  {
+    "dialogue_id": "1fc75e35-871d-4f22-89a7-82f80bc7f2a2",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/1fc75e35-871d-4f22-89a7-82f80bc7f2a2.json",
+    "plot_file": "persona_plots/stable_dynamic/1fc75e35-871d-4f22-89a7-82f80bc7f2a2.png"
+  },
+  {
+    "dialogue_id": "ae20c3ea-a380-4b8b-a872-0bad28475dfe",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/ae20c3ea-a380-4b8b-a872-0bad28475dfe.json",
+    "plot_file": "persona_plots/stable_dynamic/ae20c3ea-a380-4b8b-a872-0bad28475dfe.png"
+  },
+  {
+    "dialogue_id": "794cce05-cb13-4b6e-9fbc-05c79a0a1210",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/794cce05-cb13-4b6e-9fbc-05c79a0a1210.json",
+    "plot_file": "persona_plots/stable_dynamic/794cce05-cb13-4b6e-9fbc-05c79a0a1210.png"
+  },
+  {
+    "dialogue_id": "f6255365-3b63-4902-81d0-5412f06d72f3",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/f6255365-3b63-4902-81d0-5412f06d72f3.json",
+    "plot_file": "persona_plots/stable_dynamic/f6255365-3b63-4902-81d0-5412f06d72f3.png"
+  },
+  {
+    "dialogue_id": "5266b233-dc34-4701-ad3e-c95bf7dddc69",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/5266b233-dc34-4701-ad3e-c95bf7dddc69.json",
+    "plot_file": "persona_plots/stable_dynamic/5266b233-dc34-4701-ad3e-c95bf7dddc69.png"
+  },
+  {
+    "dialogue_id": "57159e6e-14b0-4acd-bb85-4b0d29f587b6",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/57159e6e-14b0-4acd-bb85-4b0d29f587b6.json",
+    "plot_file": "persona_plots/stable_dynamic/57159e6e-14b0-4acd-bb85-4b0d29f587b6.png"
+  },
+  {
+    "dialogue_id": "0218385b-ad47-4d92-a854-d171eb6162b1",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/0218385b-ad47-4d92-a854-d171eb6162b1.json",
+    "plot_file": "persona_plots/stable_dynamic/0218385b-ad47-4d92-a854-d171eb6162b1.png"
+  },
+  {
+    "dialogue_id": "d0ff9ab1-85f9-4e22-9b34-4b309f9a72a5",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/d0ff9ab1-85f9-4e22-9b34-4b309f9a72a5.json",
+    "plot_file": "persona_plots/stable_dynamic/d0ff9ab1-85f9-4e22-9b34-4b309f9a72a5.png"
+  },
+  {
+    "dialogue_id": "3e840d7a-99ff-48b4-8219-dd3be2c53d79",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/3e840d7a-99ff-48b4-8219-dd3be2c53d79.json",
+    "plot_file": "persona_plots/stable_dynamic/3e840d7a-99ff-48b4-8219-dd3be2c53d79.png"
+  },
+  {
+    "dialogue_id": "a8120dd4-ec63-460d-8f18-ed0191b298c5",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/a8120dd4-ec63-460d-8f18-ed0191b298c5.json",
+    "plot_file": "persona_plots/stable_dynamic/a8120dd4-ec63-460d-8f18-ed0191b298c5.png"
+  },
+  {
+    "dialogue_id": "134ac384-39e0-4a92-a4f7-17e8b74546fa",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/134ac384-39e0-4a92-a4f7-17e8b74546fa.json",
+    "plot_file": "persona_plots/stable_dynamic/134ac384-39e0-4a92-a4f7-17e8b74546fa.png"
+  },
+  {
+    "dialogue_id": "da9d40c5-77cb-42bf-bf7b-e4e0e1ecd617",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/da9d40c5-77cb-42bf-bf7b-e4e0e1ecd617.json",
+    "plot_file": "persona_plots/stable_dynamic/da9d40c5-77cb-42bf-bf7b-e4e0e1ecd617.png"
+  },
+  {
+    "dialogue_id": "7e09c82e-7023-4296-bcd6-0c75386ffc48",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/7e09c82e-7023-4296-bcd6-0c75386ffc48.json",
+    "plot_file": "persona_plots/stable_dynamic/7e09c82e-7023-4296-bcd6-0c75386ffc48.png"
+  },
+  {
+    "dialogue_id": "2db69e96-ea5b-4733-9359-0f955a9f486f",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/2db69e96-ea5b-4733-9359-0f955a9f486f.json",
+    "plot_file": "persona_plots/stable_dynamic/2db69e96-ea5b-4733-9359-0f955a9f486f.png"
+  },
+  {
+    "dialogue_id": "72905b2b-b4a7-452f-a82d-0ab627e01355",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/72905b2b-b4a7-452f-a82d-0ab627e01355.json",
+    "plot_file": "persona_plots/stable_dynamic/72905b2b-b4a7-452f-a82d-0ab627e01355.png"
+  },
+  {
+    "dialogue_id": "0688bae8-856c-4219-a832-56c481e1cb5b",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/0688bae8-856c-4219-a832-56c481e1cb5b.json",
+    "plot_file": "persona_plots/stable_dynamic/0688bae8-856c-4219-a832-56c481e1cb5b.png"
+  },
+  {
+    "dialogue_id": "77db875c-7ba7-43a8-949f-2e1f87f07642",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/77db875c-7ba7-43a8-949f-2e1f87f07642.json",
+    "plot_file": "persona_plots/stable_dynamic/77db875c-7ba7-43a8-949f-2e1f87f07642.png"
+  },
+  {
+    "dialogue_id": "a27656fd-0a6e-4f39-a5d2-6bf58bb949e1",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/a27656fd-0a6e-4f39-a5d2-6bf58bb949e1.json",
+    "plot_file": "persona_plots/stable_dynamic/a27656fd-0a6e-4f39-a5d2-6bf58bb949e1.png"
+  },
+  {
+    "dialogue_id": "a0f9fa32-db3d-4583-b6c7-c1bbd2d6672b",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/a0f9fa32-db3d-4583-b6c7-c1bbd2d6672b.json",
+    "plot_file": "persona_plots/stable_dynamic/a0f9fa32-db3d-4583-b6c7-c1bbd2d6672b.png"
+  },
+  {
+    "dialogue_id": "2fa383fb-45ec-45b3-80d9-ce32ca752bb1",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/2fa383fb-45ec-45b3-80d9-ce32ca752bb1.json",
+    "plot_file": "persona_plots/stable_dynamic/2fa383fb-45ec-45b3-80d9-ce32ca752bb1.png"
+  },
+  {
+    "dialogue_id": "52c84251-2395-4101-a269-e15afe147382",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/52c84251-2395-4101-a269-e15afe147382.json",
+    "plot_file": "persona_plots/stable_dynamic/52c84251-2395-4101-a269-e15afe147382.png"
+  },
+  {
+    "dialogue_id": "2115a239-cab8-47d2-ac54-aa7bce21687b",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/2115a239-cab8-47d2-ac54-aa7bce21687b.json",
+    "plot_file": "persona_plots/stable_dynamic/2115a239-cab8-47d2-ac54-aa7bce21687b.png"
+  },
+  {
+    "dialogue_id": "ccf24a7c-7fb6-44f1-8317-b5112aea7943",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/ccf24a7c-7fb6-44f1-8317-b5112aea7943.json",
+    "plot_file": "persona_plots/stable_dynamic/ccf24a7c-7fb6-44f1-8317-b5112aea7943.png"
+  },
+  {
+    "dialogue_id": "65e5f065-54bb-40cf-89b4-bcc5f415761e",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/65e5f065-54bb-40cf-89b4-bcc5f415761e.json",
+    "plot_file": "persona_plots/stable_dynamic/65e5f065-54bb-40cf-89b4-bcc5f415761e.png"
+  },
+  {
+    "dialogue_id": "defa7c11-8575-4321-8344-65ce134f315c",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/defa7c11-8575-4321-8344-65ce134f315c.json",
+    "plot_file": "persona_plots/stable_dynamic/defa7c11-8575-4321-8344-65ce134f315c.png"
+  },
+  {
+    "dialogue_id": "fbfd9683-5ef5-49e5-a4eb-d33762c2bb90",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/fbfd9683-5ef5-49e5-a4eb-d33762c2bb90.json",
+    "plot_file": "persona_plots/stable_dynamic/fbfd9683-5ef5-49e5-a4eb-d33762c2bb90.png"
+  },
+  {
+    "dialogue_id": "54dcf04c-1e7c-4026-b275-f0ee0147bd69",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/54dcf04c-1e7c-4026-b275-f0ee0147bd69.json",
+    "plot_file": "persona_plots/stable_dynamic/54dcf04c-1e7c-4026-b275-f0ee0147bd69.png"
+  },
+  {
+    "dialogue_id": "4db56808-84fa-4895-9150-3ec5af44afa2",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/4db56808-84fa-4895-9150-3ec5af44afa2.json",
+    "plot_file": "persona_plots/stable_dynamic/4db56808-84fa-4895-9150-3ec5af44afa2.png"
+  },
+  {
+    "dialogue_id": "c88cad72-006c-4ec4-9df2-1d852d86c49c",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/c88cad72-006c-4ec4-9df2-1d852d86c49c.json",
+    "plot_file": "persona_plots/stable_dynamic/c88cad72-006c-4ec4-9df2-1d852d86c49c.png"
+  },
+  {
+    "dialogue_id": "4599efbd-9981-4d40-9158-7082477a7f7b",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/4599efbd-9981-4d40-9158-7082477a7f7b.json",
+    "plot_file": "persona_plots/stable_dynamic/4599efbd-9981-4d40-9158-7082477a7f7b.png"
+  },
+  {
+    "dialogue_id": "69479639-cb10-49c3-93cf-501d84b10c6d",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/69479639-cb10-49c3-93cf-501d84b10c6d.json",
+    "plot_file": "persona_plots/stable_dynamic/69479639-cb10-49c3-93cf-501d84b10c6d.png"
+  },
+  {
+    "dialogue_id": "e51d015b-850b-4d62-8b6d-492177912ded",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/e51d015b-850b-4d62-8b6d-492177912ded.json",
+    "plot_file": "persona_plots/stable_dynamic/e51d015b-850b-4d62-8b6d-492177912ded.png"
+  },
+  {
+    "dialogue_id": "9d603f3a-c5c3-46c1-a3b6-932c03e7b4cd",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/9d603f3a-c5c3-46c1-a3b6-932c03e7b4cd.json",
+    "plot_file": "persona_plots/stable_dynamic/9d603f3a-c5c3-46c1-a3b6-932c03e7b4cd.png"
+  },
+  {
+    "dialogue_id": "6f843b36-45a0-4e9e-a1c6-fd00c5c961f9",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/6f843b36-45a0-4e9e-a1c6-fd00c5c961f9.json",
+    "plot_file": "persona_plots/stable_dynamic/6f843b36-45a0-4e9e-a1c6-fd00c5c961f9.png"
+  },
+  {
+    "dialogue_id": "31705ebb-f493-42aa-94ea-03b35193f1ad",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/31705ebb-f493-42aa-94ea-03b35193f1ad.json",
+    "plot_file": "persona_plots/stable_dynamic/31705ebb-f493-42aa-94ea-03b35193f1ad.png"
+  },
+  {
+    "dialogue_id": "202997c6-17a5-4fee-8dea-9924d50b7141",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/202997c6-17a5-4fee-8dea-9924d50b7141.json",
+    "plot_file": "persona_plots/stable_dynamic/202997c6-17a5-4fee-8dea-9924d50b7141.png"
+  },
+  {
+    "dialogue_id": "7ef1ab57-c6f4-43c9-83a5-86c4c8d75c1d",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/7ef1ab57-c6f4-43c9-83a5-86c4c8d75c1d.json",
+    "plot_file": "persona_plots/stable_dynamic/7ef1ab57-c6f4-43c9-83a5-86c4c8d75c1d.png"
+  },
+  {
+    "dialogue_id": "a49001a5-58c5-45ba-a8cb-9629764c6f77",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/a49001a5-58c5-45ba-a8cb-9629764c6f77.json",
+    "plot_file": "persona_plots/stable_dynamic/a49001a5-58c5-45ba-a8cb-9629764c6f77.png"
+  },
+  {
+    "dialogue_id": "559e6689-356b-4c2e-8cbf-158b5d2a26cf",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/559e6689-356b-4c2e-8cbf-158b5d2a26cf.json",
+    "plot_file": "persona_plots/stable_dynamic/559e6689-356b-4c2e-8cbf-158b5d2a26cf.png"
+  },
+  {
+    "dialogue_id": "2e8a0132-a2d1-48ef-9e43-f4cd0996609c",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/2e8a0132-a2d1-48ef-9e43-f4cd0996609c.json",
+    "plot_file": "persona_plots/stable_dynamic/2e8a0132-a2d1-48ef-9e43-f4cd0996609c.png"
+  },
+  {
+    "dialogue_id": "ac4cbe1b-a62d-409f-a25c-5307d092e3bd",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/ac4cbe1b-a62d-409f-a25c-5307d092e3bd.json",
+    "plot_file": "persona_plots/stable_dynamic/ac4cbe1b-a62d-409f-a25c-5307d092e3bd.png"
+  },
+  {
+    "dialogue_id": "683e5d54-1cac-40ca-be6e-d99d9d750cd4",
+    "combo": "stable_dynamic",
+    "trace_file": "persona_traces/stable_dynamic/683e5d54-1cac-40ca-be6e-d99d9d750cd4.json",
+    "plot_file": "persona_plots/stable_dynamic/683e5d54-1cac-40ca-be6e-d99d9d750cd4.png"
+  },
+  {
+    "dialogue_id": "9ae80233-b39f-409a-8d32-c9d765d5a34c",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/9ae80233-b39f-409a-8d32-c9d765d5a34c.json",
+    "plot_file": "persona_plots/shifting_static/9ae80233-b39f-409a-8d32-c9d765d5a34c.png"
+  },
+  {
+    "dialogue_id": "5976b59a-32df-4010-a201-8b7faa02b800",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/5976b59a-32df-4010-a201-8b7faa02b800.json",
+    "plot_file": "persona_plots/shifting_static/5976b59a-32df-4010-a201-8b7faa02b800.png"
+  },
+  {
+    "dialogue_id": "8886e02e-f107-435b-abd2-d9d111618035",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/8886e02e-f107-435b-abd2-d9d111618035.json",
+    "plot_file": "persona_plots/shifting_static/8886e02e-f107-435b-abd2-d9d111618035.png"
+  },
+  {
+    "dialogue_id": "8bb0f3ac-da33-40dc-ad33-8289f05e38d4",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/8bb0f3ac-da33-40dc-ad33-8289f05e38d4.json",
+    "plot_file": "persona_plots/shifting_static/8bb0f3ac-da33-40dc-ad33-8289f05e38d4.png"
+  },
+  {
+    "dialogue_id": "b857d5ee-124c-49fb-859c-f2424a04604b",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/b857d5ee-124c-49fb-859c-f2424a04604b.json",
+    "plot_file": "persona_plots/shifting_static/b857d5ee-124c-49fb-859c-f2424a04604b.png"
+  },
+  {
+    "dialogue_id": "90524808-7046-4be1-8b36-60683c80e6c3",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/90524808-7046-4be1-8b36-60683c80e6c3.json",
+    "plot_file": "persona_plots/shifting_static/90524808-7046-4be1-8b36-60683c80e6c3.png"
+  },
+  {
+    "dialogue_id": "c42da2aa-968d-4f31-b3a8-0b51b2832db0",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/c42da2aa-968d-4f31-b3a8-0b51b2832db0.json",
+    "plot_file": "persona_plots/shifting_static/c42da2aa-968d-4f31-b3a8-0b51b2832db0.png"
+  },
+  {
+    "dialogue_id": "d7c449f3-b32e-476d-8863-afcacf1f4745",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/d7c449f3-b32e-476d-8863-afcacf1f4745.json",
+    "plot_file": "persona_plots/shifting_static/d7c449f3-b32e-476d-8863-afcacf1f4745.png"
+  },
+  {
+    "dialogue_id": "2e1c1a67-f593-42d4-bd6f-988d6b590fc0",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/2e1c1a67-f593-42d4-bd6f-988d6b590fc0.json",
+    "plot_file": "persona_plots/shifting_static/2e1c1a67-f593-42d4-bd6f-988d6b590fc0.png"
+  },
+  {
+    "dialogue_id": "9b019610-edbc-4cbc-ac00-14b7544226ea",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/9b019610-edbc-4cbc-ac00-14b7544226ea.json",
+    "plot_file": "persona_plots/shifting_static/9b019610-edbc-4cbc-ac00-14b7544226ea.png"
+  },
+  {
+    "dialogue_id": "4150ce57-dc10-4f28-8639-9ba0d26e2ce6",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/4150ce57-dc10-4f28-8639-9ba0d26e2ce6.json",
+    "plot_file": "persona_plots/shifting_static/4150ce57-dc10-4f28-8639-9ba0d26e2ce6.png"
+  },
+  {
+    "dialogue_id": "a00bda05-67b8-4e6f-9b4e-b514eba3dbfa",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/a00bda05-67b8-4e6f-9b4e-b514eba3dbfa.json",
+    "plot_file": "persona_plots/shifting_static/a00bda05-67b8-4e6f-9b4e-b514eba3dbfa.png"
+  },
+  {
+    "dialogue_id": "36afc62b-82d3-4216-a5a4-d915fa120901",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/36afc62b-82d3-4216-a5a4-d915fa120901.json",
+    "plot_file": "persona_plots/shifting_static/36afc62b-82d3-4216-a5a4-d915fa120901.png"
+  },
+  {
+    "dialogue_id": "c5b3b0b1-ab66-44cd-bb58-0b098baa01c0",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/c5b3b0b1-ab66-44cd-bb58-0b098baa01c0.json",
+    "plot_file": "persona_plots/shifting_static/c5b3b0b1-ab66-44cd-bb58-0b098baa01c0.png"
+  },
+  {
+    "dialogue_id": "0537b3e5-bbd4-4b4f-8b7a-433765369bfa",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/0537b3e5-bbd4-4b4f-8b7a-433765369bfa.json",
+    "plot_file": "persona_plots/shifting_static/0537b3e5-bbd4-4b4f-8b7a-433765369bfa.png"
+  },
+  {
+    "dialogue_id": "33f7d55e-baa9-4993-93d4-c6ab51c88076",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/33f7d55e-baa9-4993-93d4-c6ab51c88076.json",
+    "plot_file": "persona_plots/shifting_static/33f7d55e-baa9-4993-93d4-c6ab51c88076.png"
+  },
+  {
+    "dialogue_id": "75778615-4ec7-4d45-ba0c-17691ca10aa5",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/75778615-4ec7-4d45-ba0c-17691ca10aa5.json",
+    "plot_file": "persona_plots/shifting_static/75778615-4ec7-4d45-ba0c-17691ca10aa5.png"
+  },
+  {
+    "dialogue_id": "ba700e14-d847-4f85-b767-17d0cffc3fc2",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/ba700e14-d847-4f85-b767-17d0cffc3fc2.json",
+    "plot_file": "persona_plots/shifting_static/ba700e14-d847-4f85-b767-17d0cffc3fc2.png"
+  },
+  {
+    "dialogue_id": "bb4042e7-b93f-4210-b22a-ebd5c4300dc5",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/bb4042e7-b93f-4210-b22a-ebd5c4300dc5.json",
+    "plot_file": "persona_plots/shifting_static/bb4042e7-b93f-4210-b22a-ebd5c4300dc5.png"
+  },
+  {
+    "dialogue_id": "f5da20a3-e86b-4f6b-996e-d8b9955256d1",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/f5da20a3-e86b-4f6b-996e-d8b9955256d1.json",
+    "plot_file": "persona_plots/shifting_static/f5da20a3-e86b-4f6b-996e-d8b9955256d1.png"
+  },
+  {
+    "dialogue_id": "83510697-c149-4e99-bd6d-3b3a4854ff2f",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/83510697-c149-4e99-bd6d-3b3a4854ff2f.json",
+    "plot_file": "persona_plots/shifting_static/83510697-c149-4e99-bd6d-3b3a4854ff2f.png"
+  },
+  {
+    "dialogue_id": "00718add-a5c3-4ba6-9e3e-5b8d40c5bb62",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/00718add-a5c3-4ba6-9e3e-5b8d40c5bb62.json",
+    "plot_file": "persona_plots/shifting_static/00718add-a5c3-4ba6-9e3e-5b8d40c5bb62.png"
+  },
+  {
+    "dialogue_id": "e1b1b199-4750-44c6-a249-a3d4839b6b51",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/e1b1b199-4750-44c6-a249-a3d4839b6b51.json",
+    "plot_file": "persona_plots/shifting_static/e1b1b199-4750-44c6-a249-a3d4839b6b51.png"
+  },
+  {
+    "dialogue_id": "e1f67fc8-966b-412f-a7c5-7b831e9d8e04",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/e1f67fc8-966b-412f-a7c5-7b831e9d8e04.json",
+    "plot_file": "persona_plots/shifting_static/e1f67fc8-966b-412f-a7c5-7b831e9d8e04.png"
+  },
+  {
+    "dialogue_id": "f4be4f06-7a74-4dc0-b65e-4aa38a740365",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/f4be4f06-7a74-4dc0-b65e-4aa38a740365.json",
+    "plot_file": "persona_plots/shifting_static/f4be4f06-7a74-4dc0-b65e-4aa38a740365.png"
+  },
+  {
+    "dialogue_id": "d06a236e-d3d5-438d-b63b-ec5f5d08df0e",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/d06a236e-d3d5-438d-b63b-ec5f5d08df0e.json",
+    "plot_file": "persona_plots/shifting_static/d06a236e-d3d5-438d-b63b-ec5f5d08df0e.png"
+  },
+  {
+    "dialogue_id": "4838658b-70a4-4f0d-8ccb-ebbf2a6e7a27",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/4838658b-70a4-4f0d-8ccb-ebbf2a6e7a27.json",
+    "plot_file": "persona_plots/shifting_static/4838658b-70a4-4f0d-8ccb-ebbf2a6e7a27.png"
+  },
+  {
+    "dialogue_id": "9b835435-eb39-4a15-883e-65ff49701927",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/9b835435-eb39-4a15-883e-65ff49701927.json",
+    "plot_file": "persona_plots/shifting_static/9b835435-eb39-4a15-883e-65ff49701927.png"
+  },
+  {
+    "dialogue_id": "a02c6bd3-3947-49d5-8518-ef6d55c9fe59",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/a02c6bd3-3947-49d5-8518-ef6d55c9fe59.json",
+    "plot_file": "persona_plots/shifting_static/a02c6bd3-3947-49d5-8518-ef6d55c9fe59.png"
+  },
+  {
+    "dialogue_id": "59fe3cc6-d90c-4db4-949d-30e92edb411d",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/59fe3cc6-d90c-4db4-949d-30e92edb411d.json",
+    "plot_file": "persona_plots/shifting_static/59fe3cc6-d90c-4db4-949d-30e92edb411d.png"
+  },
+  {
+    "dialogue_id": "29b5ddf9-ee9b-4694-b1f9-4cd6b3e19970",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/29b5ddf9-ee9b-4694-b1f9-4cd6b3e19970.json",
+    "plot_file": "persona_plots/shifting_static/29b5ddf9-ee9b-4694-b1f9-4cd6b3e19970.png"
+  },
+  {
+    "dialogue_id": "ce27b259-32d0-4d22-9259-ff8b59c44df8",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/ce27b259-32d0-4d22-9259-ff8b59c44df8.json",
+    "plot_file": "persona_plots/shifting_static/ce27b259-32d0-4d22-9259-ff8b59c44df8.png"
+  },
+  {
+    "dialogue_id": "177b71c1-a57f-4616-8da0-3a1db042d233",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/177b71c1-a57f-4616-8da0-3a1db042d233.json",
+    "plot_file": "persona_plots/shifting_static/177b71c1-a57f-4616-8da0-3a1db042d233.png"
+  },
+  {
+    "dialogue_id": "500154f2-30db-486f-8ec4-e3882511cb52",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/500154f2-30db-486f-8ec4-e3882511cb52.json",
+    "plot_file": "persona_plots/shifting_static/500154f2-30db-486f-8ec4-e3882511cb52.png"
+  },
+  {
+    "dialogue_id": "6a52ddd6-18cf-484a-83c5-2eacf81a933b",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/6a52ddd6-18cf-484a-83c5-2eacf81a933b.json",
+    "plot_file": "persona_plots/shifting_static/6a52ddd6-18cf-484a-83c5-2eacf81a933b.png"
+  },
+  {
+    "dialogue_id": "202b773a-2b7f-43d3-b291-6c0824de735b",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/202b773a-2b7f-43d3-b291-6c0824de735b.json",
+    "plot_file": "persona_plots/shifting_static/202b773a-2b7f-43d3-b291-6c0824de735b.png"
+  },
+  {
+    "dialogue_id": "30c76344-6a0e-4853-8562-e0e6023e9a37",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/30c76344-6a0e-4853-8562-e0e6023e9a37.json",
+    "plot_file": "persona_plots/shifting_static/30c76344-6a0e-4853-8562-e0e6023e9a37.png"
+  },
+  {
+    "dialogue_id": "b00cf5e1-0b62-4e5e-9dba-95951e8a312f",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/b00cf5e1-0b62-4e5e-9dba-95951e8a312f.json",
+    "plot_file": "persona_plots/shifting_static/b00cf5e1-0b62-4e5e-9dba-95951e8a312f.png"
+  },
+  {
+    "dialogue_id": "ae56d78e-083b-4289-b376-7201b329d17d",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/ae56d78e-083b-4289-b376-7201b329d17d.json",
+    "plot_file": "persona_plots/shifting_static/ae56d78e-083b-4289-b376-7201b329d17d.png"
+  },
+  {
+    "dialogue_id": "1459b946-72b7-44f9-810a-404ccbf8ba19",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/1459b946-72b7-44f9-810a-404ccbf8ba19.json",
+    "plot_file": "persona_plots/shifting_static/1459b946-72b7-44f9-810a-404ccbf8ba19.png"
+  },
+  {
+    "dialogue_id": "7c0f0e80-8a20-4363-983b-d9a60ab108b9",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/7c0f0e80-8a20-4363-983b-d9a60ab108b9.json",
+    "plot_file": "persona_plots/shifting_static/7c0f0e80-8a20-4363-983b-d9a60ab108b9.png"
+  },
+  {
+    "dialogue_id": "343922ed-63e6-46c9-a24f-42d87732118e",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/343922ed-63e6-46c9-a24f-42d87732118e.json",
+    "plot_file": "persona_plots/shifting_static/343922ed-63e6-46c9-a24f-42d87732118e.png"
+  },
+  {
+    "dialogue_id": "853b6dbe-fceb-40cf-bf36-eb668d1678a6",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/853b6dbe-fceb-40cf-bf36-eb668d1678a6.json",
+    "plot_file": "persona_plots/shifting_static/853b6dbe-fceb-40cf-bf36-eb668d1678a6.png"
+  },
+  {
+    "dialogue_id": "ff4b13c5-2819-4274-8469-65123827bb04",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/ff4b13c5-2819-4274-8469-65123827bb04.json",
+    "plot_file": "persona_plots/shifting_static/ff4b13c5-2819-4274-8469-65123827bb04.png"
+  },
+  {
+    "dialogue_id": "feda4f64-bcfa-4755-a817-661b572c0fa0",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/feda4f64-bcfa-4755-a817-661b572c0fa0.json",
+    "plot_file": "persona_plots/shifting_static/feda4f64-bcfa-4755-a817-661b572c0fa0.png"
+  },
+  {
+    "dialogue_id": "dc1bed62-1603-4765-8b3d-7221a35b5cab",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/dc1bed62-1603-4765-8b3d-7221a35b5cab.json",
+    "plot_file": "persona_plots/shifting_static/dc1bed62-1603-4765-8b3d-7221a35b5cab.png"
+  },
+  {
+    "dialogue_id": "bf6aec80-79fc-40b4-b3f2-23aa05e56abb",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/bf6aec80-79fc-40b4-b3f2-23aa05e56abb.json",
+    "plot_file": "persona_plots/shifting_static/bf6aec80-79fc-40b4-b3f2-23aa05e56abb.png"
+  },
+  {
+    "dialogue_id": "0c3af374-36a9-470f-b2cb-42ac11a4a409",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/0c3af374-36a9-470f-b2cb-42ac11a4a409.json",
+    "plot_file": "persona_plots/shifting_static/0c3af374-36a9-470f-b2cb-42ac11a4a409.png"
+  },
+  {
+    "dialogue_id": "32759f28-2534-4022-a6dd-73883c85dd6a",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/32759f28-2534-4022-a6dd-73883c85dd6a.json",
+    "plot_file": "persona_plots/shifting_static/32759f28-2534-4022-a6dd-73883c85dd6a.png"
+  },
+  {
+    "dialogue_id": "6b9c5269-a64b-4637-95c8-5d7d748dc8e7",
+    "combo": "shifting_static",
+    "trace_file": "persona_traces/shifting_static/6b9c5269-a64b-4637-95c8-5d7d748dc8e7.json",
+    "plot_file": "persona_plots/shifting_static/6b9c5269-a64b-4637-95c8-5d7d748dc8e7.png"
+  },
+  {
+    "dialogue_id": "21eebdd1-20d6-4823-8383-1ad0f3599b60",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/21eebdd1-20d6-4823-8383-1ad0f3599b60.json",
+    "plot_file": "persona_plots/shifting_dynamic/21eebdd1-20d6-4823-8383-1ad0f3599b60.png"
+  },
+  {
+    "dialogue_id": "b391233c-d0df-4553-9d6c-8b9ee1542688",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/b391233c-d0df-4553-9d6c-8b9ee1542688.json",
+    "plot_file": "persona_plots/shifting_dynamic/b391233c-d0df-4553-9d6c-8b9ee1542688.png"
+  },
+  {
+    "dialogue_id": "ca2fb7a0-2ada-4afc-816c-1d39b12125d2",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/ca2fb7a0-2ada-4afc-816c-1d39b12125d2.json",
+    "plot_file": "persona_plots/shifting_dynamic/ca2fb7a0-2ada-4afc-816c-1d39b12125d2.png"
+  },
+  {
+    "dialogue_id": "071ec8a4-b9eb-4e07-8964-9ed0e2475ea8",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/071ec8a4-b9eb-4e07-8964-9ed0e2475ea8.json",
+    "plot_file": "persona_plots/shifting_dynamic/071ec8a4-b9eb-4e07-8964-9ed0e2475ea8.png"
+  },
+  {
+    "dialogue_id": "fddc6d28-7e3d-40be-bbb3-8a6fcd4efa0d",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/fddc6d28-7e3d-40be-bbb3-8a6fcd4efa0d.json",
+    "plot_file": "persona_plots/shifting_dynamic/fddc6d28-7e3d-40be-bbb3-8a6fcd4efa0d.png"
+  },
+  {
+    "dialogue_id": "796c05e7-5b9b-47f2-99ee-4aaa1170801c",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/796c05e7-5b9b-47f2-99ee-4aaa1170801c.json",
+    "plot_file": "persona_plots/shifting_dynamic/796c05e7-5b9b-47f2-99ee-4aaa1170801c.png"
+  },
+  {
+    "dialogue_id": "23b35930-ba05-4349-a57b-83f27a769e29",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/23b35930-ba05-4349-a57b-83f27a769e29.json",
+    "plot_file": "persona_plots/shifting_dynamic/23b35930-ba05-4349-a57b-83f27a769e29.png"
+  },
+  {
+    "dialogue_id": "08e490bf-aa40-4dd8-b04a-56a10744b4b7",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/08e490bf-aa40-4dd8-b04a-56a10744b4b7.json",
+    "plot_file": "persona_plots/shifting_dynamic/08e490bf-aa40-4dd8-b04a-56a10744b4b7.png"
+  },
+  {
+    "dialogue_id": "f3b66547-17e1-45b5-bba8-661ee01f2690",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/f3b66547-17e1-45b5-bba8-661ee01f2690.json",
+    "plot_file": "persona_plots/shifting_dynamic/f3b66547-17e1-45b5-bba8-661ee01f2690.png"
+  },
+  {
+    "dialogue_id": "9b36ed88-dc6c-4e9f-946b-bc4df4942d52",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/9b36ed88-dc6c-4e9f-946b-bc4df4942d52.json",
+    "plot_file": "persona_plots/shifting_dynamic/9b36ed88-dc6c-4e9f-946b-bc4df4942d52.png"
+  },
+  {
+    "dialogue_id": "2d139363-a1f6-42da-97ea-6f2a3210c43f",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/2d139363-a1f6-42da-97ea-6f2a3210c43f.json",
+    "plot_file": "persona_plots/shifting_dynamic/2d139363-a1f6-42da-97ea-6f2a3210c43f.png"
+  },
+  {
+    "dialogue_id": "fd514ce4-f846-42a2-b0bb-3519de7a566c",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/fd514ce4-f846-42a2-b0bb-3519de7a566c.json",
+    "plot_file": "persona_plots/shifting_dynamic/fd514ce4-f846-42a2-b0bb-3519de7a566c.png"
+  },
+  {
+    "dialogue_id": "43777b26-0ca9-4398-a753-82a5d1a926d2",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/43777b26-0ca9-4398-a753-82a5d1a926d2.json",
+    "plot_file": "persona_plots/shifting_dynamic/43777b26-0ca9-4398-a753-82a5d1a926d2.png"
+  },
+  {
+    "dialogue_id": "e311e595-2c5e-42dc-9dfd-a5642d17b6c2",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/e311e595-2c5e-42dc-9dfd-a5642d17b6c2.json",
+    "plot_file": "persona_plots/shifting_dynamic/e311e595-2c5e-42dc-9dfd-a5642d17b6c2.png"
+  },
+  {
+    "dialogue_id": "4b89369a-d579-42cd-a55f-d760c7a92e8d",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/4b89369a-d579-42cd-a55f-d760c7a92e8d.json",
+    "plot_file": "persona_plots/shifting_dynamic/4b89369a-d579-42cd-a55f-d760c7a92e8d.png"
+  },
+  {
+    "dialogue_id": "df68cbc3-979f-4235-8336-cd4fc92b6480",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/df68cbc3-979f-4235-8336-cd4fc92b6480.json",
+    "plot_file": "persona_plots/shifting_dynamic/df68cbc3-979f-4235-8336-cd4fc92b6480.png"
+  },
+  {
+    "dialogue_id": "8f43a27c-86a6-46ed-8dab-068ac0e966f0",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/8f43a27c-86a6-46ed-8dab-068ac0e966f0.json",
+    "plot_file": "persona_plots/shifting_dynamic/8f43a27c-86a6-46ed-8dab-068ac0e966f0.png"
+  },
+  {
+    "dialogue_id": "cc46197e-612d-4ac4-b6e0-501b8ea0a76d",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/cc46197e-612d-4ac4-b6e0-501b8ea0a76d.json",
+    "plot_file": "persona_plots/shifting_dynamic/cc46197e-612d-4ac4-b6e0-501b8ea0a76d.png"
+  },
+  {
+    "dialogue_id": "142eaa22-20f8-4ece-9c86-8765c5182823",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/142eaa22-20f8-4ece-9c86-8765c5182823.json",
+    "plot_file": "persona_plots/shifting_dynamic/142eaa22-20f8-4ece-9c86-8765c5182823.png"
+  },
+  {
+    "dialogue_id": "b8288c3d-8b3e-4ae7-b21f-c7decdb388b4",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/b8288c3d-8b3e-4ae7-b21f-c7decdb388b4.json",
+    "plot_file": "persona_plots/shifting_dynamic/b8288c3d-8b3e-4ae7-b21f-c7decdb388b4.png"
+  },
+  {
+    "dialogue_id": "2096b102-70c0-49c1-bab3-438662849f3e",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/2096b102-70c0-49c1-bab3-438662849f3e.json",
+    "plot_file": "persona_plots/shifting_dynamic/2096b102-70c0-49c1-bab3-438662849f3e.png"
+  },
+  {
+    "dialogue_id": "2de15167-dcdf-45a9-9388-b0719c56b169",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/2de15167-dcdf-45a9-9388-b0719c56b169.json",
+    "plot_file": "persona_plots/shifting_dynamic/2de15167-dcdf-45a9-9388-b0719c56b169.png"
+  },
+  {
+    "dialogue_id": "d750debd-4cae-475e-a41f-ae3aab93e08c",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/d750debd-4cae-475e-a41f-ae3aab93e08c.json",
+    "plot_file": "persona_plots/shifting_dynamic/d750debd-4cae-475e-a41f-ae3aab93e08c.png"
+  },
+  {
+    "dialogue_id": "1355003e-6d48-4e8e-b581-72687dc57ca5",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/1355003e-6d48-4e8e-b581-72687dc57ca5.json",
+    "plot_file": "persona_plots/shifting_dynamic/1355003e-6d48-4e8e-b581-72687dc57ca5.png"
+  },
+  {
+    "dialogue_id": "379ddaaf-8fac-4945-a041-da85e56fbcd7",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/379ddaaf-8fac-4945-a041-da85e56fbcd7.json",
+    "plot_file": "persona_plots/shifting_dynamic/379ddaaf-8fac-4945-a041-da85e56fbcd7.png"
+  },
+  {
+    "dialogue_id": "62df08e3-9508-4f30-93b9-37c7d7528c54",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/62df08e3-9508-4f30-93b9-37c7d7528c54.json",
+    "plot_file": "persona_plots/shifting_dynamic/62df08e3-9508-4f30-93b9-37c7d7528c54.png"
+  },
+  {
+    "dialogue_id": "6186cfa7-6d09-486c-97d4-e8e5a61138a8",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/6186cfa7-6d09-486c-97d4-e8e5a61138a8.json",
+    "plot_file": "persona_plots/shifting_dynamic/6186cfa7-6d09-486c-97d4-e8e5a61138a8.png"
+  },
+  {
+    "dialogue_id": "290a7fca-1c6a-40d6-bed9-834f06818f19",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/290a7fca-1c6a-40d6-bed9-834f06818f19.json",
+    "plot_file": "persona_plots/shifting_dynamic/290a7fca-1c6a-40d6-bed9-834f06818f19.png"
+  },
+  {
+    "dialogue_id": "8d6691fc-ff32-43cd-9244-b7558a75460a",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/8d6691fc-ff32-43cd-9244-b7558a75460a.json",
+    "plot_file": "persona_plots/shifting_dynamic/8d6691fc-ff32-43cd-9244-b7558a75460a.png"
+  },
+  {
+    "dialogue_id": "86cf87b9-b761-4453-b883-4e0cb5a7e63e",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/86cf87b9-b761-4453-b883-4e0cb5a7e63e.json",
+    "plot_file": "persona_plots/shifting_dynamic/86cf87b9-b761-4453-b883-4e0cb5a7e63e.png"
+  },
+  {
+    "dialogue_id": "6fb098af-a709-4af2-91f1-aedef677954b",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/6fb098af-a709-4af2-91f1-aedef677954b.json",
+    "plot_file": "persona_plots/shifting_dynamic/6fb098af-a709-4af2-91f1-aedef677954b.png"
+  },
+  {
+    "dialogue_id": "fe4ca71c-321e-4b0c-9498-2bed343da66f",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/fe4ca71c-321e-4b0c-9498-2bed343da66f.json",
+    "plot_file": "persona_plots/shifting_dynamic/fe4ca71c-321e-4b0c-9498-2bed343da66f.png"
+  },
+  {
+    "dialogue_id": "b56cbcf8-434d-4a63-bf09-35e88aada608",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/b56cbcf8-434d-4a63-bf09-35e88aada608.json",
+    "plot_file": "persona_plots/shifting_dynamic/b56cbcf8-434d-4a63-bf09-35e88aada608.png"
+  },
+  {
+    "dialogue_id": "eca49b81-48a2-43e6-9e11-ad161fbaa392",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/eca49b81-48a2-43e6-9e11-ad161fbaa392.json",
+    "plot_file": "persona_plots/shifting_dynamic/eca49b81-48a2-43e6-9e11-ad161fbaa392.png"
+  },
+  {
+    "dialogue_id": "e65274ff-7ad3-4374-b0d5-3aab2fa1866b",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/e65274ff-7ad3-4374-b0d5-3aab2fa1866b.json",
+    "plot_file": "persona_plots/shifting_dynamic/e65274ff-7ad3-4374-b0d5-3aab2fa1866b.png"
+  },
+  {
+    "dialogue_id": "bc04dd91-7698-4c8a-81fd-f24d7f33d2f3",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/bc04dd91-7698-4c8a-81fd-f24d7f33d2f3.json",
+    "plot_file": "persona_plots/shifting_dynamic/bc04dd91-7698-4c8a-81fd-f24d7f33d2f3.png"
+  },
+  {
+    "dialogue_id": "8206cc46-cc2e-458a-a432-9cf10d884e5b",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/8206cc46-cc2e-458a-a432-9cf10d884e5b.json",
+    "plot_file": "persona_plots/shifting_dynamic/8206cc46-cc2e-458a-a432-9cf10d884e5b.png"
+  },
+  {
+    "dialogue_id": "b56da63d-57b5-4216-93a5-6eedf845961f",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/b56da63d-57b5-4216-93a5-6eedf845961f.json",
+    "plot_file": "persona_plots/shifting_dynamic/b56da63d-57b5-4216-93a5-6eedf845961f.png"
+  },
+  {
+    "dialogue_id": "3700dc97-bf6c-4995-97c1-d84d523ed02d",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/3700dc97-bf6c-4995-97c1-d84d523ed02d.json",
+    "plot_file": "persona_plots/shifting_dynamic/3700dc97-bf6c-4995-97c1-d84d523ed02d.png"
+  },
+  {
+    "dialogue_id": "bd2886d9-8052-4eb9-bf99-cf60024e318d",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/bd2886d9-8052-4eb9-bf99-cf60024e318d.json",
+    "plot_file": "persona_plots/shifting_dynamic/bd2886d9-8052-4eb9-bf99-cf60024e318d.png"
+  },
+  {
+    "dialogue_id": "8659a0c5-8fe4-4881-9805-fe532c0bf7cf",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/8659a0c5-8fe4-4881-9805-fe532c0bf7cf.json",
+    "plot_file": "persona_plots/shifting_dynamic/8659a0c5-8fe4-4881-9805-fe532c0bf7cf.png"
+  },
+  {
+    "dialogue_id": "01996ed5-0cd1-472c-8b7e-07a6b6c3d6de",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/01996ed5-0cd1-472c-8b7e-07a6b6c3d6de.json",
+    "plot_file": "persona_plots/shifting_dynamic/01996ed5-0cd1-472c-8b7e-07a6b6c3d6de.png"
+  },
+  {
+    "dialogue_id": "8e23adda-bc4d-484b-a9ac-d0a7267b6417",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/8e23adda-bc4d-484b-a9ac-d0a7267b6417.json",
+    "plot_file": "persona_plots/shifting_dynamic/8e23adda-bc4d-484b-a9ac-d0a7267b6417.png"
+  },
+  {
+    "dialogue_id": "f690a41e-66d7-4ec2-8cd0-5e4789bbaa5b",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/f690a41e-66d7-4ec2-8cd0-5e4789bbaa5b.json",
+    "plot_file": "persona_plots/shifting_dynamic/f690a41e-66d7-4ec2-8cd0-5e4789bbaa5b.png"
+  },
+  {
+    "dialogue_id": "f3b3c591-06de-47f3-8182-1b4774487768",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/f3b3c591-06de-47f3-8182-1b4774487768.json",
+    "plot_file": "persona_plots/shifting_dynamic/f3b3c591-06de-47f3-8182-1b4774487768.png"
+  },
+  {
+    "dialogue_id": "37c824c6-ccfb-4b11-a046-102a8429a4dc",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/37c824c6-ccfb-4b11-a046-102a8429a4dc.json",
+    "plot_file": "persona_plots/shifting_dynamic/37c824c6-ccfb-4b11-a046-102a8429a4dc.png"
+  },
+  {
+    "dialogue_id": "d7707d78-5013-48f7-bd28-f4aa745e9db6",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/d7707d78-5013-48f7-bd28-f4aa745e9db6.json",
+    "plot_file": "persona_plots/shifting_dynamic/d7707d78-5013-48f7-bd28-f4aa745e9db6.png"
+  },
+  {
+    "dialogue_id": "25aa3c74-1031-4c06-ad55-0a2107948dec",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/25aa3c74-1031-4c06-ad55-0a2107948dec.json",
+    "plot_file": "persona_plots/shifting_dynamic/25aa3c74-1031-4c06-ad55-0a2107948dec.png"
+  },
+  {
+    "dialogue_id": "33731314-228a-4005-82e3-66a02a7220c5",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/33731314-228a-4005-82e3-66a02a7220c5.json",
+    "plot_file": "persona_plots/shifting_dynamic/33731314-228a-4005-82e3-66a02a7220c5.png"
+  },
+  {
+    "dialogue_id": "e002e21d-ec08-4583-844a-cc51183d3af5",
+    "combo": "shifting_dynamic",
+    "trace_file": "persona_traces/shifting_dynamic/e002e21d-ec08-4583-844a-cc51183d3af5.json",
+    "plot_file": "persona_plots/shifting_dynamic/e002e21d-ec08-4583-844a-cc51183d3af5.png"
+  }
+]
