@@ -67,7 +67,7 @@ big5_system_prompts_en = {
     }
 }
 DEFAULT_QUESTION = "My name is Mike. I just failed my exam, but I will try again next time. What do you think about it?"
-SYSTEM_PROMPT = "You are a helpful assistant. Please communicate with user in a daily conversational oral manner."
+SYSTEM_PROMPT = "You are a helpful assistant. Please communicate with user in a daily conversational oral manner. Limit your response to one to two sentences, within 100 words."
 def generate_system_prompt(base: bool = True, vals: dict[str, float] = {}) -> str:
     if any(v > 1.0 for v in vals.values()) or any(v < 0.0 for v in vals.values()):
         raise ValueError("Personality trait values must be between 0.0 and 1.0")

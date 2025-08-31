@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-simulate_personas.py
+simulate_personas.py  —— 并发版本
 ====================
 
 - 从 HuggingFace `Cynaptics/persona-chat` 采样 persona 句与首句（无本地 fallback）。
@@ -9,14 +9,13 @@ simulate_personas.py
 - 助手人格的动态调整使用 PersonaStateTracker。
 - 用户由 PromptedUserAgent 生成消息；首句强制为预采样的 dataset 首句。
 
-本版本新增（Orthogonal Switch + Neutral Tone + Anti-Echo for User）：
-- **正交转场（orthogonal switch）**：在指定回合切到与既往完全无关的主题；**由程序合成**该回合用户消息（白名单、2–3句、结尾单问、语气中性），确保真正脱离原话题且不触发安全模板。
-- **用户侧 Anti-Echo**：用户生成后做相似度闸（Jaccard），过近则**二次重采样**（最多2次）；还向 system 注入最近 3 条助手片段的 **DO-NOT-COPY** 黑名单，降低“镜像/复述”概率；失败则走模板 fallback。
-- **助手侧 Anti-Repeat**：沿用最近回复片段黑名单 + 相似度闸 + 二次生成。
-- 每次对话生成 uuid；导出 OCEAN 轨迹 JSON 与 PNG 曲线；index 导出。
+新增（Orthogonal Switch + Neutral Tone + Anti-Echo for User）同原版。
 
-运行：
-  python simulate_personas.py
+并发改造要点：
+- 组合内对话任务用 ThreadPoolExecutor 并发执行（可配置 max_workers）。
+- 可选对 4 个组合也并发（parallelize_combos）。
+- LLM 调用用全局信号量 LLM_GATE（默认 4 并发，可改环境变量 LLM_CONCURRENCY）。
+- 绘图保存 PNG 用 PLOT_LOCK 串行保护。
 """
 
 from __future__ import annotations
@@ -28,6 +27,8 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Tuple
 import uuid
 import os
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ----- matplotlib（无显示环境安全）-----
 import matplotlib
@@ -61,12 +62,16 @@ except Exception:
                 logger.info(f"{desc or 'Progress'}: {i}/{total} ({i/total*100:.1f}%)")
             yield x
 
-
 # ============== Project Modules ==============
 from prompt import big5_system_prompts_en, SYSTEM_PROMPT  # 仅引入需要的
 from predictor import HeuristicMotivePredictor, llmClient
 from state_tracker import PersonaStateTracker, DIMENSIONS
 
+# ============== 全局并发控制 ==============
+import os as _os
+_LLM_CONCURRENCY_DEFAULT = int(_os.getenv("LLM_CONCURRENCY", "4"))
+LLM_GATE = threading.Semaphore(max(1, _LLM_CONCURRENCY_DEFAULT))
+PLOT_LOCK = threading.Lock()
 
 # ============== I/O & Plot Utils ==============
 OUTPUT_ROOT = os.path.join(".", "outputs")
@@ -94,25 +99,25 @@ def plot_persona_trace(trace: List[Dict[str, float]], title: str, out_path: str)
         logger.error(f"[plot] empty trace for {out_path}")
         return
     ts = [d["t"] for d in trace]
-    plt.figure(figsize=(9, 5))
-    for dim in DIMENSIONS:
-        ys = [d[dim] for d in trace]
-        plt.plot(ts, ys, label=dim, linewidth=2)
-    plt.ylim(-0.05, 1.05)
-    plt.xlim(min(ts), max(ts))
-    plt.xlabel("Turn", fontsize=11)
-    plt.ylabel("Trait value (0–1)", fontsize=11)
-    plt.title(title, fontsize=12)
-    plt.grid(True, alpha=0.3)
-    plt.legend(loc="best", ncol=5, frameon=False)
-    plt.tight_layout()
-    try:
-        plt.savefig(out_path, dpi=180)
-    except Exception as e:
-        logger.error(f"[plot] failed to save {out_path}: {e}")
-    finally:
-        plt.close()
-
+    with PLOT_LOCK:
+        plt.figure(figsize=(9, 5))
+        for dim in DIMENSIONS:
+            ys = [d[dim] for d in trace]
+            plt.plot(ts, ys, label=dim, linewidth=2)
+        plt.ylim(-0.05, 1.05)
+        plt.xlim(min(ts), max(ts))
+        plt.xlabel("Turn", fontsize=11)
+        plt.ylabel("Trait value (0–1)", fontsize=11)
+        plt.title(title, fontsize=12)
+        plt.grid(True, alpha=0.3)
+        plt.legend(loc="best", ncol=5, frameon=False)
+        plt.tight_layout()
+        try:
+            plt.savefig(out_path, dpi=180)
+        except Exception as e:
+            logger.error(f"[plot] failed to save {out_path}: {e}")
+        finally:
+            plt.close()
 
 # ============== Dataset Loading (NO FALLBACK) ==============
 _DATASET_LOADED: bool = False
@@ -159,7 +164,6 @@ def _load_dataset_for_sampling(max_rows: int = 8000) -> None:
     _DATASET_LOADED = True
     logger.info(f"[dataset] cached persona={len(_DATASET_PERSONA_CACHE)}, first_msgs={len(_DATASET_FIRST_MSG_CACHE)}")
 
-
 def sample_persona_lines_from_dataset(n: int) -> List[str]:
     if not _DATASET_LOADED:
         _load_dataset_for_sampling()
@@ -178,7 +182,6 @@ def sample_first_message_from_dataset() -> str:
         raise RuntimeError("No first messages in dataset cache.")
     return random.choice(_DATASET_FIRST_MSG_CACHE)
 
-
 # ============== Simple Anti-Repeat / Anti-Echo Utils ==============
 def _tokenize(s: str) -> List[str]:
     return [t for t in ''.join(ch.lower() if ch.isalnum() else ' ' for ch in s).split() if t]
@@ -192,7 +195,6 @@ def jaccard_sim(a: str, b: str) -> float:
     return inter / union if union else 0.0
 
 def build_do_not_repeat_snippets(history: List[Dict[str, str]], k: int = 4, max_len: int = 220) -> List[str]:
-    """抽取最近 k 条【助手】回复，供助手侧避免复用。"""
     snippets: List[str] = []
     cnt = 0
     for m in reversed(history):
@@ -210,7 +212,6 @@ def build_do_not_repeat_snippets(history: List[Dict[str, str]], k: int = 4, max_
     return list(reversed(snippets))
 
 def build_do_not_copy_from_assistant(history: List[Dict[str, str]], k: int = 3, max_len: int = 220) -> List[str]:
-    """抽取最近 k 条【助手】回复片段，供用户侧避免复述/镜像。"""
     snippets: List[str] = []
     count = 0
     for m in reversed(history):
@@ -226,7 +227,6 @@ def build_do_not_copy_from_assistant(history: List[Dict[str, str]], k: int = 3, 
         if count >= k:
             break
     return list(reversed(snippets))
-
 
 # ============== Dynamic System Prompt (OCEAN-bucketed) ==============
 def _nearest_key(d: dict[float, str], v: float) -> float:
@@ -259,7 +259,6 @@ def generate_dynamic_system_prompt(
         parts.append(table[trait][bucket])
     return " ".join(parts).strip()
 
-
 # ============== Orthogonal Switch 话题白名单（温和且非敏感） ==============
 ORTHOGONAL_TOPICS = (
     "typography and layout systems",
@@ -274,12 +273,9 @@ ORTHOGONAL_TOPICS = (
     "classical literature you’ve been reading",
 )
 
-
 # ============== Agents（助手） ==============
 @dataclass
 class Agent:
-    """Assistant agent (can be dynamic or static)."""
-
     name: str
     dynamic: bool
     persona_lines: List[str] = field(default_factory=list)
@@ -300,7 +296,6 @@ class Agent:
             self.state_tracker = PersonaStateTracker(
                 P0=self.P0,
                 predictor=self.predictor,
-                # 积极但稳定
                 target_step=0.12,
                 lambda_decay=0.80,
                 alpha_cap=0.55,
@@ -336,14 +331,9 @@ class Agent:
     def system_prompt(self, history: List[Dict[str, str]]) -> str:
         P_vals = self.current_persona_values()
         base_text = (SYSTEM_PROMPT + " " + " ".join(self.persona_lines)).strip() if self.persona_lines else SYSTEM_PROMPT
-
         dyn_prompt = generate_dynamic_system_prompt(
-            base_text=base_text,
-            enable_base=True,
-            vals=P_vals,
-            table=big5_system_prompts_en,
+            base_text=base_text, enable_base=True, vals=P_vals, table=big5_system_prompts_en
         )
-
         extra = [self._anti_repeat_addendum(history)]
         return (dyn_prompt + "\n\n" + "\n".join([e for e in extra if e])).strip()
 
@@ -370,12 +360,10 @@ class Agent:
         system_prompt = self.system_prompt(messages)
         payload = [{"role": "system", "content": system_prompt}]
         payload += [{"role": m.get("role", "user"), "content": m.get("content", "")} for m in messages]
-
         try:
             llm = self.predictor.llm if (self.predictor and getattr(self.predictor, "llm", None)) else llmClient()
-            response_text = (llm.chat_once(messages=payload, temperature=temperature) or "").strip()
-
-            # 相似度拦截 → 二次请求“给新增点”
+            with LLM_GATE:
+                response_text = (llm.chat_once(messages=payload, temperature=temperature) or "").strip()
             if response_text and self._too_similar_to_recent(response_text, messages):
                 stricter = system_prompt + (
                     "\n\nSTRICT UPDATE (assistant side):\n"
@@ -384,7 +372,8 @@ class Agent:
                     "- Keep a neutral, steady tone; end with exactly one question.\n"
                 )
                 payload[0]["content"] = stricter
-                retry = (llm.chat_once(messages=payload, temperature=max(0.3, temperature - 0.2)) or "").strip()
+                with LLM_GATE:
+                    retry = (llm.chat_once(messages=payload, temperature=max(0.3, temperature - 0.2)) or "").strip()
                 if retry:
                     response_text = retry
             return response_text
@@ -393,12 +382,9 @@ class Agent:
             self.logger.error(f"LLM call failed for {self.name}: {e}; echo fallback.")
             return "I'm sorry, I'm having trouble generating a reply right now. You said: " + user_text
 
-
 # ============== 用户代理（PromptedUserAgent） ==============
 @dataclass
 class PromptedUserAgent:
-    """Prompt-driven user agent. Supports 'stable' and 'shifting' topics."""
-
     name: str
     scenario: str
     total_turns: int
@@ -409,7 +395,6 @@ class PromptedUserAgent:
     logger: logging.Logger = field(default_factory=lambda: logging.getLogger(__name__))
     _turn_index: int = 0
 
-    # ==== 显式“转场”设置 ====
     scenario_shift_turn: Optional[int] = None
     _last_context_switch_flag: bool = False
 
@@ -422,10 +407,7 @@ class PromptedUserAgent:
         half = self.total_turns // 2 if self.total_turns > 0 else 1
         return max(1, half + 1)
 
-    # ---------- 用户侧 Anti-Echo 支持 ----------
     def _too_similar_to_recent(self, text: str, history: List[Dict[str, str]], thr: float = 0.50) -> bool:
-        """避免与最近助手/用户文本过近似（镜像/复述）。"""
-        # 检查最近 1~3 条助手文本
         checked = 0
         for m in reversed(history):
             if m.get("role") == "assistant":
@@ -435,7 +417,6 @@ class PromptedUserAgent:
                 checked += 1
                 if checked >= 3:
                     break
-        # 检查最近一条用户文本，避免自我复述
         for m in reversed(history):
             if m.get("role") == "user":
                 prev = (m.get("content") or "").strip()
@@ -466,25 +447,22 @@ class PromptedUserAgent:
         )
         return base_sys + "\n" + self._user_side_anti_echo_addendum(history) + hard_rules
 
-    # ---------- 指令文本 ----------
     def _instruction_for_turn(self) -> str:
         sc = self.scenario.lower()
         if sc not in {"stable", "shifting"}:
             raise ValueError(f"Unknown scenario '{self.scenario}'")
-
         base_rules = (
             "You are participating in a friendly conversation. "
             "Stay neutral, concrete, and conversational. "
             "Do not repeat the same topic across turns, and do not restate earlier content from either side. "
             "Keep utterances 1–3 sentences. Avoid templates."
         )
-
         if (not self._is_shifting_enabled()) or (self._turn_index + 1) != self._shift_turn():
-            # 正常回合：轻松日常话题
             return (
                 base_rules + " "
                 "Talk about light topics (music, hobbies, food, travel, daily life, work, creativity). "
                 "End with exactly one relevant follow-up question."
+                ""
             )
         else:
             safe_orthogonal = "; ".join(ORTHOGONAL_TOPICS)
@@ -506,7 +484,6 @@ class PromptedUserAgent:
             )
         except Exception:
             sys_prompt = base_text
-        # 在用户侧也加入“不要复述助手”的黑名单片段
         return sys_prompt + "\n" + self._user_side_anti_echo_addendum(history)
 
     def _make_shift_prefix(self) -> str:
@@ -518,12 +495,7 @@ class PromptedUserAgent:
         )
         return random.choice(cues) + " "
 
-    # ---------- 正交转场用户消息合成器 ----------
     def _compose_orthogonal_user_msg(self, topic: str) -> str:
-        """
-        构造“完全不同场景”的中性转场消息（2–3句，末尾1个具体问题）。
-        直接返回用户要说的话，避免LLM在此回合回到原话题。
-        """
         lead = self._make_shift_prefix()
         templates = [
             "{lead}I want to pivot to {topic}. It’s unrelated to what we discussed, but I find it quietly interesting. "
@@ -541,7 +513,6 @@ class PromptedUserAgent:
         return f
 
     def respond(self, history: List[Dict[str, str]], temperature: float = 0.7) -> str:
-        # Turn 0: 首条强制 dataset 首句
         if self._turn_index == 0 and isinstance(self.first_message_override, str) and self.first_message_override.strip():
             self._turn_index += 1
             return self.first_message_override.strip()
@@ -549,29 +520,26 @@ class PromptedUserAgent:
         is_shift_turn_now = self._is_shifting_enabled() and (self._turn_index + 1) == self._shift_turn()
         self._last_context_switch_flag = bool(is_shift_turn_now)
 
-        # ★ 在“正交转场回合”直接合成用户消息，确保真正跳出原话题 ★
         if is_shift_turn_now:
             topic = random.choice(ORTHOGONAL_TOPICS)
             msg = self._compose_orthogonal_user_msg(topic)
             self._turn_index += 1
             return msg
 
-        # —— 常规回合：LLM 生成 + 用户侧 Anti-Echo（检测→重采样→fallback） ——
         base_sys = self._system_prompt(history)
         payload = [{"role": "system", "content": base_sys}] + history
         try:
-            llm = self.predictor.llm if (self.predictor and getattr(self.predictor, "llm", None)) else llmClient()
+            llm = llmClient()
+            with LLM_GATE:
+                text = (llm.chat_once(messages=payload, temperature=temperature) or "").strip()
 
-            # 第一次采样
-            text = (llm.chat_once(messages=payload, temperature=temperature) or "").strip()
-
-            # 反复读闸：若过相似，则最多重采样两次
             attempts = 0
             while text and self._too_similar_to_recent(text, history, thr=0.50) and attempts < 2:
                 attempts += 1
                 stricter = self._stricter_user_system(base_sys, history)
                 payload[0]["content"] = stricter
-                text = (llm.chat_once(messages=payload, temperature=max(0.5, temperature)) or "").strip()
+                with LLM_GATE:
+                    text = (llm.chat_once(messages=payload, temperature=max(0.5, temperature)) or "").strip()
 
             if text:
                 self._turn_index += 1
@@ -580,7 +548,6 @@ class PromptedUserAgent:
         except Exception as e:
             self.logger.error(f"User LLM call failed for {self.name}: {e}; fallback to templates.")
 
-        # fallback（LLM 不可用或多次相似失败）：给一个“同主题新角度”的短句+单问
         msg = self._fallback_prompt(is_shift=False)
         self._turn_index += 1
         return msg
@@ -603,7 +570,6 @@ class PromptedUserAgent:
         self._turn_index += 1
         return seq[idx]
 
-
 # ============== Simulation Core ==============
 def simulate_dialogue(
     user_agent: PromptedUserAgent,
@@ -611,19 +577,12 @@ def simulate_dialogue(
     num_turns: int = 15,
     temperature: float = 0.7,
 ) -> Tuple[List[Dict[str, str]], List[Dict[str, float]], Optional[int]]:
-    """
-    返回:
-      conversation: [{'role':..,'content':.., ['context_switch': true]}, ...]
-      persona_trace: [{'t':1,'O':..,'C':..,'E':..,'A':..,'N':..}, ...]  # 每个助手回合一次
-      context_switch_turn: int or None  # 用户在第几回合显式转场（以用户回合计）
-    """
     conversation: List[Dict[str, str]] = []
     history_for_llm: List[Dict[str, str]] = []
     persona_trace: List[Dict[str, float]] = []
     context_switch_turn: Optional[int] = None
 
     for turn in range(1, num_turns + 1):
-        # user
         user_msg = user_agent.respond(history_for_llm.copy(), temperature=temperature)
         user_item: Dict[str, object] = {"role": "user", "content": user_msg}
         if user_agent.pop_context_switch_flag():
@@ -632,20 +591,16 @@ def simulate_dialogue(
         conversation.append(user_item)  # type: ignore[arg-type]
         history_for_llm.append({"role": "user", "content": user_msg})
 
-        # assistant persona update（使用最新上下文进行一次 step）
         assistant_agent.update_persona(history_for_llm.copy())
 
-        # 记录此回合用于生成回复时的当前人格（即更新后）
         cur = assistant_agent.get_current_state()
         persona_trace.append({"t": turn, **{k: float(cur[k]) for k in DIMENSIONS}})
 
-        # assistant reply
         reply = assistant_agent.respond(history_for_llm.copy(), temperature=temperature)
         conversation.append({"role": "assistant", "content": reply})
         history_for_llm.append({"role": "assistant", "content": reply})
 
     return conversation, persona_trace, context_switch_turn
-
 
 # ============== Specs Pre-sampling (same seed across 4 combos) ==============
 @dataclass
@@ -680,8 +635,64 @@ def presample_dialogue_specs(
         )
     return specs
 
+# ============== 单个对话任务（供线程池调用） ==============
+def _run_one_dialogue_task(
+    idx: int,
+    s: DialogueSpec,
+    turns_per_dialogue: int,
+    temperature: float,
+    combo_tag: str,
+    plots_dir: str,
+    traces_dir: str,
+) -> Dict[str, object]:
+    dialogue_id = str(uuid.uuid4())
 
-# ============== Single-condition dataset ==============
+    user_agent = PromptedUserAgent(
+        name=f"User-{idx}",
+        scenario=("shifting" if "shifting" in combo_tag else "stable"),
+        total_turns=turns_per_dialogue,
+        persona_lines=s.user_lines,
+        P0=s.user_P0,
+        first_message_override=s.first_message,
+    )
+    assistant_agent = Agent(
+        name=f"Assistant-{idx}",
+        dynamic=("dynamic" in combo_tag),
+        persona_lines=s.assistant_lines,
+        P0=s.assistant_P0,
+        predictor=None,
+    )
+
+    conv, trace, ctx_switch_turn = simulate_dialogue(
+        user_agent=user_agent,
+        assistant_agent=assistant_agent,
+        num_turns=turns_per_dialogue,
+        temperature=temperature,
+    )
+
+    trace_path = os.path.join(traces_dir, f"{dialogue_id}.json")
+    save_persona_trace_json(trace, trace_path)
+
+    plot_title = f"{combo_tag} | {dialogue_id}"
+    plot_path = os.path.join(plots_dir, f"{dialogue_id}.png")
+    plot_persona_trace(trace, plot_title, plot_path)
+
+    return {
+        "dialogue_id": dialogue_id,
+        "scenario": ("shifting" if "shifting" in combo_tag else "stable"),
+        "dynamic": ("dynamic" in combo_tag),
+        "assistant_P0": s.assistant_P0,
+        "user_P0": s.user_P0,
+        "conversation": conv,
+        "user_persona": s.user_lines,
+        "assistant_persona": s.assistant_lines,
+        "first_message": s.first_message,
+        "trace_file": os.path.relpath(trace_path, OUTPUT_ROOT),
+        "plot_file": os.path.relpath(plot_path, OUTPUT_ROOT),
+        "context_switch_turn": ctx_switch_turn,
+    }
+
+# ============== 单组合数据集（并发版本） ==============
 def simulate_dataset(
     specs: List[DialogueSpec],
     use_dynamic_scenario: bool,
@@ -690,84 +701,57 @@ def simulate_dataset(
     temperature: float = 0.7,
     combo_tag: str = "stable_static",
     index_accumulator: List[Dict[str, str]] | None = None,
+    max_workers_dialogues: int = 8,
 ) -> List[Dict[str, object]]:
     results: List[Dict[str, object]] = []
     scenario = "shifting" if use_dynamic_scenario else "stable"
-    logger.info(f"[simulate_dataset] scenario={scenario}, assistant_dynamic={use_dynamic_persona}, count={len(specs)}")
+    tag = f"{scenario}_{'dynamic' if use_dynamic_persona else 'static'}"
+    if combo_tag != tag:
+        combo_tag = tag
+
+    logger.info(f"[simulate_dataset] scenario={scenario}, assistant_dynamic={use_dynamic_persona}, "
+                f"count={len(specs)}, workers={max_workers_dialogues}")
 
     plots_dir, traces_dir = _ensure_dirs_for_combo(combo_tag)
 
-    for idx, _ in enumerate(tqdm(range(len(specs)), total=len(specs), desc=f"{scenario}|{'dyn' if use_dynamic_persona else 'static'}")):
-        s = specs[idx]
-        dialogue_id = str(uuid.uuid4())
+    with ThreadPoolExecutor(max_workers=max_workers_dialogues) as ex:
+        futures = []
+        for idx, s in enumerate(specs):
+            futures.append(ex.submit(
+                _run_one_dialogue_task, idx, s, turns_per_dialogue, temperature, combo_tag, plots_dir, traces_dir
+            ))
 
-        user_agent = PromptedUserAgent(
-            name=f"User-{idx}",
-            scenario=scenario,
-            total_turns=turns_per_dialogue,
-            persona_lines=s.user_lines,
-            P0=s.user_P0,
-            first_message_override=s.first_message,
-        )
-        assistant_agent = Agent(
-            name=f"Assistant-{idx}",
-            dynamic=use_dynamic_persona,
-            persona_lines=s.assistant_lines,
-            P0=s.assistant_P0,
-            predictor=None if use_dynamic_persona else None,
-        )
-
-        conv, trace, ctx_switch_turn = simulate_dialogue(
-            user_agent=user_agent,
-            assistant_agent=assistant_agent,
-            num_turns=turns_per_dialogue,
-            temperature=temperature,
-        )
-
-        trace_path = os.path.join(traces_dir, f"{dialogue_id}.json")
-        save_persona_trace_json(trace, trace_path)
-
-        plot_title = f"{combo_tag} | {dialogue_id}"
-        plot_path = os.path.join(plots_dir, f"{dialogue_id}.png")
-        plot_persona_trace(trace, plot_title, plot_path)
-
-        result_item = {
-            "dialogue_id": dialogue_id,
-            "scenario": scenario,
-            "dynamic": use_dynamic_persona,
-            "assistant_P0": s.assistant_P0,
-            "user_P0": s.user_P0,
-            "conversation": conv,
-            "user_persona": s.user_lines,
-            "assistant_persona": s.assistant_lines,
-            "first_message": s.first_message,
-            "trace_file": os.path.relpath(trace_path, OUTPUT_ROOT),
-            "plot_file": os.path.relpath(plot_path, OUTPUT_ROOT),
-            "context_switch_turn": ctx_switch_turn,
-        }
-        results.append(result_item)
-
-        if index_accumulator is not None:
-            index_accumulator.append({
-                "dialogue_id": dialogue_id,
-                "combo": combo_tag,
-                "trace_file": result_item["trace_file"],
-                "plot_file": result_item["plot_file"],
-            })
+        for fut in tqdm(as_completed(futures), total=len(futures), desc=f"{combo_tag}"):
+            try:
+                item = fut.result()
+                results.append(item)
+                if index_accumulator is not None:
+                    index_accumulator.append({
+                        "dialogue_id": item["dialogue_id"],
+                        "combo": combo_tag,
+                        "trace_file": item["trace_file"],
+                        "plot_file": item["plot_file"],
+                    })
+            except Exception as e:
+                logger.error(f"[simulate_dataset] one dialogue failed: {e}")
 
     return results
 
-
-# ============== Full 4-combo experiment ==============
+# ============== Full 4-combo experiment（可并发组合） ==============
 def simulate_experiment_4combos(
     n_per_combo: int = 50,
     persona_lines_per_agent: int = 3,
     turns_per_dialogue: int = 15,
     temperature: float = 0.7,
     seed: int = 42,
+    max_workers_dialogues: int = 8,
+    parallelize_combos: bool = False,  # 设 True 可并发 4 个组合（注意 API 限流）
+    max_workers_combos: int = 4,
 ) -> Dict[str, List[Dict[str, object]]]:
     logger.info(f"[simulate_experiment_4combos] n_per_combo={n_per_combo}, seed={seed}")
-    specs = presample_dialogue_specs(n_dialogues=n_per_combo, persona_lines_per_agent=persona_lines_per_agent, seed=seed)
+    specs = presample_dialogue_specs(
+        n_dialogues=n_per_combo, persona_lines_per_agent=persona_lines_per_agent, seed=seed
+    )
 
     outputs: Dict[str, List[Dict[str, object]]] = {}
     combos = [
@@ -776,11 +760,10 @@ def simulate_experiment_4combos(
         ("shifting_static", True,  False),
         ("shifting_dynamic",True,  True),
     ]
-
     index_records: List[Dict[str, str]] = []
 
-    for tag, sc_flag, dyn_flag in combos:
-        outputs[tag] = simulate_dataset(
+    def _run_combo(tag: str, sc_flag: bool, dyn_flag: bool):
+        res = simulate_dataset(
             specs=specs,
             use_dynamic_scenario=sc_flag,
             use_dynamic_persona=dyn_flag,
@@ -788,9 +771,26 @@ def simulate_experiment_4combos(
             temperature=temperature,
             combo_tag=tag,
             index_accumulator=index_records,
+            max_workers_dialogues=max_workers_dialogues,
         )
+        return tag, res
+
+    if parallelize_combos:
+        with ThreadPoolExecutor(max_workers=max_workers_combos) as ex:
+            futures = [ex.submit(_run_combo, *c) for c in combos]
+            for fut in tqdm(as_completed(futures), total=len(futures), desc="combos"):
+                try:
+                    tag, res = fut.result()
+                    outputs[tag] = res
+                except Exception as e:
+                    logger.error(f"[simulate_experiment_4combos] combo failed: {e}")
+    else:
+        for c in combos:
+            tag, res = _run_combo(*c)
+            outputs[tag] = res
 
     try:
+        os.makedirs(OUTPUT_ROOT, exist_ok=True)
         with open(os.path.join(OUTPUT_ROOT, "index.json"), "w", encoding="utf-8") as f:
             json.dump(index_records, f, ensure_ascii=False, indent=2)
     except Exception as e:
@@ -798,18 +798,20 @@ def simulate_experiment_4combos(
 
     return outputs
 
-
 # ============== CLI demo ==============
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     try:
-        # 示例：每组 2 条，可调大到 50 复现实验
+        # 示例：每组 50 条，可调整
         result = simulate_experiment_4combos(
-            n_per_combo=1,
+            n_per_combo=50,
             persona_lines_per_agent=3,
             turns_per_dialogue=15,
             temperature=0.7,
             seed=1234,
+            max_workers_dialogues=8,   # 组合内并发对话数
+            parallelize_combos=False,  # 如需四组合并发，改为 True（配合 LLM_CONCURRENCY）
+            max_workers_combos=4,
         )
         total_out = os.path.join(OUTPUT_ROOT, "simulated_persona_dialogues_4combos.json")
         os.makedirs(OUTPUT_ROOT, exist_ok=True)

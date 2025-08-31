@@ -6,3 +6,5 @@ chat_history.jsonl
 .DS_Store
 .vscode
 logs
+*.log
+*.tar.gz
