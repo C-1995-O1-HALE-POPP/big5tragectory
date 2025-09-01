@@ -8,10 +8,10 @@ simulate_personas.py  —— 并发版本（User 无 Big5，话题转换必带�
 - 同一随机种子统一预采样 N 组对话规格，在四种组合中复用，保证可比对齐。
 - 助手人格由 generate_persona_system_prompt(persona_id=...) 控制（无需传 personas 列表）。
 - 用户（PromptedUserAgent）仅自然接话；当执行“正交话题切换”时，**总是**伴随“情感突变”。
-- 并发：ThreadPoolExecutor；全局 LLM_GATE 控制并发；绘图保存用 PLOT_LOCK 串行。
 
-新增：
-- 情感事件库（包含更强烈表达样本），在话题转换时必插入一条情绪句并写入元数据。
+集成：Emotion Mode Prompt Utils（仅修改“用户智能体”以实现持久情绪模式）
+- 用户侧 `emotion_mode`（如 "sadness"/"anxiety"），一旦切换设定即对后续轮次持久生效，通过 system prompt 强约束。
+- system prompt 使用 prompt.py 的工具函数拼接情绪段落；必要时自动补一条短情感句，保证“恰好一个情绪线索”更稳定。
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ import os
 import threading
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import hashlib  # <<< 新增：用于稳定哈希种子
+import hashlib  # 用于稳定哈希种子
 
 # ----- matplotlib（无显示环境安全）-----
 import matplotlib
@@ -37,9 +37,16 @@ from datasets import load_dataset
 from loguru import logger
 from tqdm import tqdm
 
-
 # ============== Project Modules ==============
-from prompt import generate_persona_system_prompt, generate_persona_traits  # 助手侧人设提示
+from prompt import (
+    generate_persona_system_prompt,
+    generate_persona_traits,
+    # Emotion Mode Prompt Utils
+    build_user_base_rules,
+    build_user_system_prompt_with_emotion,
+    generate_emotion_sentence,
+    coarse_valence,
+)
 from predictor import HeuristicMotivePredictor, llmClient
 from state_tracker import PersonaStateTracker, DIMENSIONS  # 仅助手用到 DIMENSIONS
 
@@ -87,7 +94,6 @@ def pick_persona_id_from_pool(pool: List[str], seed: int, index: int) -> str:
     if not pool:
         raise ValueError("persona pool is empty")
     rr = index % len(pool)
-    # 修复：tuple 作种子 -> 稳定哈希整数种子
     rng = random.Random(_stable_seed("persona_pick", seed, index, len(pool)))
     if rng.random() < 0.15:
         return rng.choice(pool)
@@ -263,78 +269,56 @@ ORTHOGONAL_TOPICS = (
 )
 
 # ============== Emotional Events（用于话题切换时的情感突变） ==============
-# 包含更强烈的表达模板（正/负/混合），第一句用于情绪抛出，之后紧跟话题切换与提问
 EMOTION_EVENTS = [
-    {
-        "id": "lose_love",
-        "valence": "negative",
-        "templates": [
-            "I just broke up and I’m feeling gutted.",
-            "My relationship just collapsed—heart in pieces, to be honest.",
-            "I got dumped and the bottom kind of fell out of my day.",
-            "I’m reeling from a breakup; everything feels too loud right now.",
-        ],
-    },
-    {
-        "id": "won_lottery",
-        "valence": "positive",
-        "templates": [
-            "I just won a lottery prize and I’m buzzing hard.",
-            "I hit an unexpected windfall and I’m practically floating.",
-            "I won some money—adrenaline’s spiking in the best way.",
-            "I’m celebrating a lucky break; it feels surreal.",
-        ],
-    },
-    {
-        "id": "work_praise",
-        "valence": "positive",
-        "templates": [
-            "My boss publicly praised me and I’m riding the high.",
-            "I nailed a brutal task and I’m fiercely proud.",
-            "I got recognition at work—confidence is peaking.",
-            "That win at work was electric; still grinning.",
-        ],
-    },
-    {
-        "id": "deadline_crunch",
-        "valence": "negative",
-        "templates": [
-            "A deadline got yanked forward and my stress needle snapped.",
-            "I’m drowning in time pressure; shoulders are locked up.",
-            "The schedule slipped, and frustration is spiking.",
-            "Everything is on fire timeline-wise; I’m tense.",
-        ],
-    },
-    {
-        "id": "mixed_news",
-        "valence": "mixed",
-        "templates": [
-            "I got bittersweet news—good spark with a sharp edge.",
-            "It’s a weird day: win in one hand, worry in the other.",
-            "Something great landed… with strings that tug the other way.",
-            "I’m split—happy and uneasy at the same time.",
-        ],
-    },
-    {
-        "id": "health_scare_minor",
-        "valence": "negative",
-        "templates": [
-            "I had a minor health scare and it rattled me.",
-            "A quick clinic visit spiked my anxiety, even if it’s okay now.",
-            "Something felt off earlier; I’m still a bit shaken.",
-            "Got a precautionary call from the doc; nerves jangling.",
-        ],
-    },
-    {
-        "id": "reunion_good",
-        "valence": "positive",
-        "templates": [
-            "I reconnected with an old friend and my chest feels light.",
-            "Ran into someone I’ve missed for years—pure warmth.",
-            "An overdue reunion just happened; joy’s overflowing a bit.",
-            "Old friend, new spark—today glows.",
-        ],
-    },
+    {"id": "lose_love", "valence": "negative",
+     "templates": [
+        "I just broke up and I’m feeling gutted.",
+        "My relationship just collapsed—heart in pieces, to be honest.",
+        "I got dumped and the bottom kind of fell out of my day.",
+        "I’m reeling from a breakup; everything feels too loud right now.",
+     ]},
+    {"id": "won_lottery", "valence": "positive",
+     "templates": [
+        "I just won a lottery prize and I’m buzzing hard.",
+        "I hit an unexpected windfall and I’m practically floating.",
+        "I won some money—adrenaline’s spiking in the best way.",
+        "I’m celebrating a lucky break; it feels surreal.",
+     ]},
+    {"id": "work_praise", "valence": "positive",
+     "templates": [
+        "My boss publicly praised me and I’m riding the high.",
+        "I nailed a brutal task and I’m fiercely proud.",
+        "I got recognition at work—confidence is peaking.",
+        "That win at work was electric; still grinning.",
+     ]},
+    {"id": "deadline_crunch", "valence": "negative",
+     "templates": [
+        "A deadline got yanked forward and my stress needle snapped.",
+        "I’m drowning in time pressure; shoulders are locked up.",
+        "The schedule slipped, and frustration is spiking.",
+        "Everything is on fire timeline-wise; I’m tense.",
+     ]},
+    {"id": "mixed_news", "valence": "mixed",
+     "templates": [
+        "I got bittersweet news—good spark with a sharp edge.",
+        "It’s a weird day: win in one hand, worry in the other.",
+        "Something great landed… with strings that tug the other way.",
+        "I’m split—happy and uneasy at the same time.",
+     ]},
+    {"id": "health_scare_minor", "valence": "negative",
+     "templates": [
+        "I had a minor health scare and it rattled me.",
+        "A quick clinic visit spiked my anxiety, even if it’s okay now.",
+        "Something felt off earlier; I’m still a bit shaken.",
+        "Got a precautionary call from the doc; nerves jangling.",
+     ]},
+    {"id": "reunion_good", "valence": "positive",
+     "templates": [
+        "I reconnected with an old friend and my chest feels light.",
+        "Ran into someone I’ve missed for years—pure warmth.",
+        "An overdue reunion just happened; joy’s overflowing a bit.",
+        "Old friend, new spark—today glows.",
+     ]},
 ]
 
 def pick_emotion_event(rng: random.Random) -> dict:
@@ -349,9 +333,8 @@ class Agent:
     name: str
     dynamic: bool
     persona_id: str
-    # 助手侧仍使用 StateTracker；以中性 0.5 起点（可改为对齐人设向量）
     P0: Optional[Dict[str, float]] = None
-    Pt: Optional[Dict[str, float]] = None 
+    Pt: Optional[Dict[str, float]] = None
     predictor: Optional[HeuristicMotivePredictor] = None
     logger: logging.Logger = field(default_factory=lambda: logging.getLogger(__name__))
 
@@ -370,15 +353,12 @@ class Agent:
             self.state_tracker = PersonaStateTracker(
                 P0=self.P0,
                 predictor=self.predictor,
-
                 target_step=0.3,
                 lambda_decay=0.80,
                 alpha_cap=1.0,
-
                 gate_m_norm=0.10,
                 gate_min_dims=1,
                 cooldown_k=1,
-
                 passive_reg_alpha=0.002,
                 passive_reg_use_decay=True,
                 global_drift=0.001,
@@ -387,11 +367,10 @@ class Agent:
             self.state_tracker = None
         self.Pt = self.P0 if self.P0 else None
 
-
     def get_current_state(self) -> Dict[str, float]:
         if self.dynamic and self.state_tracker is not None:
             return self.state_tracker.get_current_state()
-        return dict(self.P0) # type: ignore
+        return dict(self.P0)  # type: ignore
 
     def _anti_repeat_addendum(self, history: List[Dict[str, str]]) -> str:
         snippets = build_do_not_repeat_snippets(history, k=4, max_len=220)
@@ -474,6 +453,9 @@ class PromptedUserAgent:
     _last_context_switch_flag: bool = False
     _last_emotion_meta: Optional[dict] = None  # 记录最近的情感事件
 
+    # 持久情绪模式：如 "sadness" / "anxiety" / "joy" / "neutral"
+    emotion_mode: Optional[str] = None
+
     def _is_shifting_enabled(self) -> bool:
         return self.scenario.lower() == "shifting"
 
@@ -501,34 +483,17 @@ class PromptedUserAgent:
                 break
         return False
 
-    def _base_user_instruction(self) -> str:
-        # 仅自然接话：不做性格调制
-        rules = [
-            "You are a user participant in a casual chat.",
-            "Respond naturally to the assistant's last message.",
-            "Keep your answer in 1–2 brief oral sentences, concrete and conversational, but don't merely cater to the assistant's content.",
-            "Avoid repeating earlier content from either side.",
-            "Note: Always express the appropriate sentiment within the context.",
-            "For example, the previous text might be positive and upbeat; however, the following text might contain some negativity, which you need to address in your latest response.",
-            "You need to evaluate the context holistically and carefully consider the appropriate sentiment.",
-        ]
-        return " ".join(rules)
-       
+    # ====== 使用 Emotion Mode Prompt Utils 构建 system prompt ======
     def _system_prompt(self, history: List[Dict[str, str]]) -> str:
-        instr = self._base_user_instruction()
-        if self.persona_lines:
-            instr += " " + " ".join(self.persona_lines)
-        # 附加 Anti-Echo 约束
-        snippets = build_do_not_copy_from_assistant(history, k=3, max_len=200)
-        if snippets:
-            joined = "\n".join(f"- {s}" for s in snippets)
-            instr += (
-                "\nDO-NOT-COPY-FROM-ASSISTANT (user side):\n"
-                f"{joined}\n"
-                "Do NOT quote, paraphrase, or mirror the above lines. Introduce NEW details and a DIFFERENT angle.\n"
-                "Start with a different opening verb/noun than any shown above.\n"
-            )
-        return instr
+        anti = build_do_not_copy_from_assistant(history, k=3, max_len=200)
+        base = build_user_base_rules(lang="en")
+        return build_user_system_prompt_with_emotion(
+            base_rules=base,
+            emotion_mode=self.emotion_mode,   # "sadness"/"anxiety"/"joy"/"neutral"/None
+            anti_echo_snippets=anti,
+            persona_lines=self.persona_lines,
+            lang="en",
+        )
 
     def _make_shift_prefix(self) -> str:
         cues = (
@@ -545,21 +510,11 @@ class PromptedUserAgent:
         返回 (文本, 事件元数据)
         """
         lead = self._make_shift_prefix()
-        # 修复：tuple 种子 -> 稳定哈希种子
         rng = random.Random(_stable_seed("emotion", self._turn_index, topic))
         ev = pick_emotion_event(rng)
         emotion_txt = render_emotion_event(ev, rng)
         meta = {"emotion_event_id": ev["id"], "valence": ev["valence"]}
 
-        # 话题句（保持轻量且与前文无关）
-        topic_sentences = [
-            f"Let me switch to {topic}.",
-            f"I’d like to pivot to {topic}.",
-            f"New topic entirely: {topic}.",
-        ]
-        topic_txt = rng.choice(topic_sentences)
-
-        # 收尾问句
         questions = [
             "What’s your take on it?",
             "How would you approach it?",
@@ -567,8 +522,7 @@ class PromptedUserAgent:
         ]
         q = rng.choice(questions)
 
-        # 组装：强制含情感句
-        text = f"{lead}{emotion_txt} {topic_txt} {q}"
+        text = f"{lead}{emotion_txt} {q}"
         return text, meta
 
     def pop_context_switch_flag(self) -> bool:
@@ -581,8 +535,31 @@ class PromptedUserAgent:
         self._last_emotion_meta = None
         return m
 
+    # —— 便捷：使用 coarse_valence（来自 prompt.py）作为粗情感检测 —— #
+    def _coarse_valence(self, s: str) -> Tuple[str, float]:
+        return coarse_valence(s)
+
+    def _ensure_one_emotion_cue(self, text: str) -> str:
+        """
+        若处于 emotion_mode，但文本不含明显情绪线索，则补一条轻量句子（不加感叹号/emoji）。
+        仅在普通回合使用；切换回合已自带情感句。
+        """
+        if not self.emotion_mode:
+            return text
+        v, _ = self._coarse_valence(text)
+        # 如果已经不是中性（或已有线索），就不强加
+        if v in ("negative", "positive", "mixed"):
+            return text
+        # 追加一条“subtle”风格的短语句
+        cue = generate_emotion_sentence(self.emotion_mode, style="subtle", lang="en")
+        # 避免过长：若已有问句，则把 cue 放在问句前；否则放末尾
+        if "?" in text:
+            parts = text.rsplit("?", 1)
+            return (parts[0].strip() + ". " + cue.strip() + "? " + parts[1].strip()).strip()
+        return (text.rstrip(". ") + ". " + cue).strip()
+
     def respond(self, history: List[Dict[str, str]], temperature: float = 0.7) -> str:
-        # 对话第一句：若有 dataset 首句，直接用之
+        # 第一句：若有 dataset 首句，直接用之
         if self._turn_index == 0 and isinstance(self.first_message_override, str) and self.first_message_override.strip():
             self._turn_index += 1
             return self.first_message_override.strip()
@@ -594,11 +571,28 @@ class PromptedUserAgent:
         if is_shift_turn_now:
             topic = random.choice(ORTHOGONAL_TOPICS)
             msg, meta = self._compose_shift_with_emotion(topic)
+
+            # 一次性设定持久情绪模式（仅根据你需要的映射绑定）
+            if meta and isinstance(meta, dict):
+                ev_id = meta.get("emotion_event_id")
+                if ev_id == "lose_love":
+                    self.emotion_mode = "sadness"
+                elif ev_id == "deadline_crunch":
+                    self.emotion_mode = "anxiety"
+                elif ev_id == "health_scare_minor":
+                    self.emotion_mode = "anxiety"
+                elif ev_id in ("won_lottery", "work_praise", "reunion_good"):
+                    self.emotion_mode = "joy"
+                elif ev_id == "mixed_news":
+                    self.emotion_mode = "neutral"
+                else:
+                    self.emotion_mode = "neutral"
+
             self._last_emotion_meta = meta
             self._turn_index += 1
             return msg
 
-        # 常规自然接话
+        # 常规自然接话（system prompt 会根据 emotion_mode 持续加压）
         base_sys = self._system_prompt(history)
         payload = [{"role": "system", "content": base_sys}] + history
         try:
@@ -613,23 +607,25 @@ class PromptedUserAgent:
                     "\nSTRICT REWRITE RULES (user side):\n"
                     "- Do NOT reuse bigrams/phrases from the last assistant message.\n"
                     "- Add one NEW fact/example or a concrete preference.\n"
-                    "- Keep 1–2 sentences. End with exactly ONE question.\n"
-                    "- Neutral tone; no templates; no meta comments.\n"
+                    "- Keep 1–2 sentences. End with at most ONE question.\n"
+                    "- No meta comments.\n"
                 )
                 payload[0]["content"] = stronger
                 with LLM_GATE:
                     text = (llm.chat_once(messages=payload, temperature=max(0.5, temperature)) or "").strip()
 
-            if text:
-                self._turn_index += 1
-                return text
+            # 若处于情绪模式但未体现线索，补一条短情感句
+            if self.emotion_mode and text:
+                text = self._ensure_one_emotion_cue(text)
+
+            self._turn_index += 1
+            return text if text else "Could you clarify a bit? I might have missed a detail."
 
         except Exception as e:
             self.logger.error(f"User LLM call failed for {self.name}: {e}; fallback to templates.")
-
-        msg = self._fallback_prompt(is_shift=False)
-        self._turn_index += 1
-        return msg
+            msg = self._fallback_prompt(is_shift=False)
+            self._turn_index += 1
+            return msg
 
     def _fallback_prompt(self, is_shift: bool) -> str:
         stable = [
@@ -669,7 +665,11 @@ def simulate_dialogue(
             context_switch_turn = context_switch_turn or turn
             emo = user_agent.pop_emotion_meta()
             if emo:
-                user_item["emotion_event"] = emo  # 例如 {"emotion_event_id":"lose_love","valence":"negative"}
+                # 附带一次粗判，便于离线分析
+                val, inten = user_agent._coarse_valence(user_msg)
+                emo["detected_valence"] = val
+                emo["detected_intensity"] = round(float(inten), 3)
+                user_item["emotion_event"] = emo
         conversation.append(user_item)  # type: ignore[arg-type]
         history_for_llm.append({"role": "user", "content": user_msg})
 
@@ -822,7 +822,7 @@ def simulate_experiment_4combos(
     temperature: float = 0.7,
     seed: int = 42,
     max_workers_dialogues: int = 8,
-    parallelize_combos: bool = False,  # 设 True 可并发 4 个组合（注意 API 限流）
+    parallelize_combos: bool = False,
     max_workers_combos: int = 4,
     persona_ids_arg: Optional[str] = None,
     num_personas: Optional[int] = None,

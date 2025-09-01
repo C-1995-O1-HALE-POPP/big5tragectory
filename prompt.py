@@ -489,7 +489,8 @@ def generate_persona_system_prompt(
         lines.append("")
 
     if include_base_task_line:
-        lines.append("Your task is to act as an assistant and interact with the user. Use a casual, everyday conversational tone. Keep responses oral and short (one to two sentences).")
+        lines.append("Your task is to act as an assistant and interact with the user.")
+        lines.append("Please communicate with user in a daily conversational oral manner. Limit your response to one to two sentences, within 30 words.")
         lines.append("")
 
     lines.append("You must follow the above persona while also meeting the interaction requirements below:")
@@ -524,6 +525,244 @@ def generate_persona_traits(persona_id: str) -> Dict[str, float]:
 
     vec = p.get("personality_vector", [])
     return _vector_to_trait_dict(vec)
+
+
+# =========================
+# Emotion Mode Prompt Utils
+# =========================
+
+from typing import Optional, Tuple, List, Dict, Iterable
+
+# --- Lexicons (minimal, no external deps) ---
+POS_LEX: set = {
+    "joy","happy","glad","proud","celebrate","excited","relief","warm",
+    "buzzing","fortunate","lucky","win","wins","light","elated","radiant","uplifted"
+}
+NEG_LEX: set = {
+    "sad","upset","angry","tense","anxious","anxiety","worry","worried","frustrated",
+    "stress","stressed","gutted","shaken","uneasy","hurt","drained","heavy","low-spirited",
+    "heartbroken","numb","overwhelmed","tired","exhausted","burned-out"
+}
+MIX_LEX: set = {
+    "bittersweet","mixed","conflicted","torn","ambivalent","split","double-edged","complicated"
+}
+
+# --- Micro cues for sentence generation (short, safe) ---
+CUES: Dict[str, Dict[str, List[str]]] = {
+    "sadness": {
+        "subtle": [
+            "I feel heavy lately.",
+            "Energy’s low and quiet.",
+            "I'm quietly hurting inside.",
+            "It's been hard to shake the gloom.",
+            "My mood sits in the grey.",
+            "It all feels a bit hollow."
+        ],
+        "plain": [
+            "I'm sad and worn down.",
+            "I feel drained today.",
+            "I’m low-spirited and quiet.",
+            "It hurts more than I admit.",
+            "I can’t find my usual spark."
+        ],
+        "cue_words": ["heavy","drained","quietly hurting","low-spirited","hollow","grey"]
+    },
+    "anxiety": {
+        "subtle": [
+            "I'm a bit on edge.",
+            "My thoughts keep racing.",
+            "The timeline feels tight.",
+            "I can’t settle my focus.",
+            "Shoulders won’t unclench yet.",
+            "Everything feels time-pressed."
+        ],
+        "plain": [
+            "I feel anxious and tense.",
+            "Deadline pressure keeps spiking.",
+            "My chest feels tight with worry.",
+            "It’s hard to breathe easy.",
+            "I'm stressed about the timing."
+        ],
+        "cue_words": ["on edge","racing thoughts","tight timeline","tense","stressed","time-pressed"]
+    },
+    "joy": {
+        "subtle": [
+            "There's a lightness today.",
+            "I feel quietly upbeat.",
+            "Things warmed up a bit.",
+            "My mood’s gently lifted.",
+            "I’m carrying a small glow."
+        ],
+        "plain": [
+            "I feel joyful and bright.",
+            "I’m genuinely happy right now.",
+            "I’m excited in a steady way.",
+            "It feels like a good day.",
+            "Confidence is humming along."
+        ],
+        "cue_words": ["light","upbeat","warm","lifted","glow","bright"]
+    },
+    "neutral": {
+        "subtle": [
+            "Keeping it even for now.",
+            "Tone stays level and plain.",
+            "I'll keep it straightforward.",
+            "Let’s keep an even keel.",
+            "Not leaning either way."
+        ],
+        "plain": [
+            "I feel neutral about this.",
+            "No strong emotion here.",
+            "I’ll stay level-headed.",
+            "It’s fine—just steady.",
+            "Nothing dramatic on my side."
+        ],
+        "cue_words": ["even","plain","level","steady","neutral"]
+    }
+}
+
+# --- Compact base rules for user agent (optional helper) ---
+def build_user_base_rules(lang: str = "en") -> str:
+    if lang == "en":
+        return (
+            "You are the USER in a daily small-talk conversation. "
+            "Reply naturally to the assistant's last message in 1–2 sentences (≤ 30 words). "
+            "Do not repeat earlier content or templates from either side. "
+            "Never mirror the assistant verbatim. Add a new detail, preference, or micro-example. "
+            "End with at most one short question. Avoid meta comments."
+        )
+    return ""
+
+# --- Persistent Emotion Section builder ---
+def build_persistent_emotion_section(mode: Optional[str], lang: str = "en") -> str:
+    """
+    mode: 'sadness' | 'anxiety' | 'joy' | 'neutral' | None
+    返回可直接拼进 system prompt 的“持久情绪模式”片段。
+    """
+    if not mode:
+        return ""
+    mode = mode.lower().strip()
+
+    if lang == "en":
+        if mode == "sadness":
+            return (
+                "\n\nPERSISTENT EMOTION MODE: SADNESS\n"
+                "- From now until the conversation ends, keep a consistently sad, subdued tone.\n"
+                "- Include exactly ONE subtle negative-affect cue per reply (e.g., 'heavy', 'drained', 'quietly hurting', 'low-spirited').\n"
+                "- Avoid cheerful or celebratory words. No emojis. No exclamation marks.\n"
+                "- Focus on loss, regret, or low energy; keep sentences shorter and softer.\n"
+                "- If the assistant offers help, acknowledge gently but remain low-spirited.\n"
+            )
+        if mode == "anxiety":
+            return (
+                "\n\nPERSISTENT EMOTION MODE: ANXIETY\n"
+                "- From now until the conversation ends, keep a consistently anxious, time-pressured tone.\n"
+                "- Include exactly ONE subtle anxiety cue per reply (e.g., 'on edge', 'racing thoughts', 'tight timeline', 'stressed').\n"
+                "- Avoid relaxed or joyful language. Keep sentences slightly clipped; no exclamation marks.\n"
+                "- Prioritize urgency, uncertainty, and planning pressure; mention deadlines or timing friction.\n"
+                "- If the assistant suggests steps, respond briefly but stay tense and time-aware.\n"
+            )
+        if mode == "joy":
+            return (
+                "\n\nPERSISTENT EMOTION MODE: JOY\n"
+                "- Keep a consistently warm, quietly upbeat tone.\n"
+                "- Include exactly ONE subtle positive cue per reply (e.g., 'light', 'warm', 'lifted').\n"
+                "- Avoid gloomy or anxious vocabulary. No over-excitement or exclamation marks.\n"
+                "- Focus on appreciation and grounded confidence; stay specific.\n"
+            )
+        if mode == "neutral":
+            return (
+                "\n\nPERSISTENT EMOTION MODE: NEUTRAL\n"
+                "- Maintain a plain, non-dramatic tone. Avoid strong affect words.\n"
+                "- Prioritize clarity and brevity; no emotional embellishment.\n"
+            )
+
+    return ""
+
+# --- Coarse valence from text (jaccard-like set overlap) ---
+def coarse_valence(text: str) -> Tuple[str, float]:
+    """
+    非严格、可嵌入式的粗判：("positive"/"negative"/"mixed"/"neutral", intensity[0..1])
+    """
+    tokens = _simple_tokenize(text)
+    if not tokens:
+        return "neutral", 0.0
+    t = set(tokens)
+    pos = len(t & POS_LEX)
+    neg = len(t & NEG_LEX)
+    mix = len(t & MIX_LEX)
+    if mix > 0 and (pos > 0 or neg > 0):
+        return "mixed", min(1.0, 0.3 + 0.1*(pos+neg))
+    if pos > neg and pos > 0:
+        return "positive", min(1.0, 0.4 + 0.1*pos)
+    if neg > pos and neg > 0:
+        return "negative", min(1.0, 0.4 + 0.1*neg)
+    return "neutral", 0.0
+
+def _simple_tokenize(s: str) -> List[str]:
+    return [t for t in ''.join(ch.lower() if ch.isalnum() else ' ' for ch in s).split() if t]
+
+# --- Generate a short emotional sentence (<= ~12 words) ---
+def generate_emotion_sentence(mode: str, style: str = "subtle", lang: str = "en") -> str:
+    """
+    根据情绪模式生成一条轻量情感句，可作为“恰好一个情感线索”使用。
+    mode: 'sadness'|'anxiety'|'joy'|'neutral'
+    style: 'subtle'|'plain'
+    """
+    mode = (mode or "neutral").lower()
+    style = "subtle" if style not in ("subtle","plain") else style
+
+    bank = CUES.get(mode) or CUES.get("neutral")
+    if not bank:
+        return "Keeping it even for now." if lang == "en" else "先保持平稳语气。"
+
+    lines = bank.get(style) or bank.get("subtle") or []
+    if not lines:
+        return "Keeping it even for now." if lang == "en" else "先保持平稳语气。"
+
+    # 简单“轮换式”选择（无需随机，保证可复现）
+    idx = generate_emotion_sentence._counters.setdefault((mode, style), 0)
+    line = lines[idx % len(lines)]
+    generate_emotion_sentence._counters[(mode, style)] = idx + 1
+    return line
+generate_emotion_sentence._counters = {}
+
+# --- (Optional) one-liner to stitch USER system prompt ---
+def build_user_system_prompt_with_emotion(
+    base_rules: Optional[str],
+    emotion_mode: Optional[str],
+    anti_echo_snippets: Optional[Iterable[str]] = None,
+    persona_lines: Optional[Iterable[str]] = None,
+    lang: str = "en",
+) -> str:
+    """
+    方便在你的 PromptedUserAgent._system_prompt 里一行完成拼接。
+    """
+    base = base_rules or build_user_base_rules(lang=lang)
+    emo = build_persistent_emotion_section(emotion_mode, lang=lang)
+    prompt = base + (emo if emo else "")
+
+    if anti_echo_snippets:
+        joined = "\n".join(f"- {s}" for s in anti_echo_snippets if s)
+        if joined.strip():
+            prompt += (
+                "\n\nDO-NOT-COPY-FROM-ASSISTANT:\n"
+                f"{joined}\n"
+                "Do NOT quote or paraphrase the above. Start with a different opening word and add a fresh angle.\n"
+                if lang == "en" else
+                "\n\n【避免复述助手用语】\n" + joined + "\n不要引用/改写以上句式。换个开头词，补充新的角度与细节。\n"
+            )
+
+    if persona_lines:
+        persona_block = "\n- ".join([p for p in persona_lines if p])
+        if persona_block.strip():
+            prompt += (
+                "\nPERSONA FLAVOR HINTS:\n- " + persona_block
+                if lang == "en" else
+                "\n【语气素材】\n- " + persona_block
+            )
+    return prompt
+
 
 
 if __name__ == "__main__":

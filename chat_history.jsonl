@@ -5246,3 +5246,6 @@ LLM change temperature to 0.7
 {"event": "assistant_message", "session_id": "d9af7186-ecdf-4a8a-b687-d4812a3ebc68", "text": "I totally get that. Deadlines can create such a sense of urgency and pressure. It might help to reframe how you view them. Instead of seeing them as a source of stress, try thinking of them as a way to structure your work and keep you focused. \n\nCreating a timeline or a checklist can break the project down into smaller, less intimidating tasks. When you tick off those smaller tasks, it can give you a sense of accomplishment and make the deadline feel more manageable. \n\nAlso, don’t forget to give yourself some grace. It’s okay to feel overwhelmed, and taking small breaks can help clear your mind. What’s the deadline you’re facing right now? Maybe we can brainstorm some strategies together!"}
 {"event": "round_end", "session_id": "d9af7186-ecdf-4a8a-b687-d4812a3ebc68", "tokens": 697}
 [stream_chat] finished, total_len=697, elapsed=1.85s
+LLM init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=0.7
+{"event": "session_init", "session_id": "3441d661-4abc-415d-bf17-634b91623fff"}
+LLM init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=0.7
