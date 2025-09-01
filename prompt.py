@@ -489,7 +489,7 @@ def generate_persona_system_prompt(
         lines.append("")
 
     if include_base_task_line:
-        lines.append("Your task is to act as an assistant and interact with the user. Use a casual, everyday conversational tone. Keep responses short (one to two sentences).")
+        lines.append("Your task is to act as an assistant and interact with the user. Use a casual, everyday conversational tone. Keep responses oral and short (one to two sentences).")
         lines.append("")
 
     lines.append("You must follow the above persona while also meeting the interaction requirements below:")

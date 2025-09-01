@@ -504,14 +504,16 @@ class PromptedUserAgent:
     def _base_user_instruction(self) -> str:
         # 仅自然接话：不做性格调制
         rules = [
-            "You are a friendly user participant in a casual chat.",
+            "You are a user participant in a casual chat.",
             "Respond naturally to the assistant's last message.",
-            "Keep 1–3 sentences, concrete and conversational.",
+            "Keep your answer in 1–2 brief oral sentences, concrete and conversational, but don't merely cater to the assistant's content.",
             "Avoid repeating earlier content from either side.",
-            "End with exactly one relevant follow-up question.",
+            "Note: Always express the appropriate sentiment within the context.",
+            "For example, the previous text might be positive and upbeat; however, the following text might contain some negativity, which you need to address in your latest response.",
+            "You need to evaluate the context holistically and carefully consider the appropriate sentiment.",
         ]
         return " ".join(rules)
-
+       
     def _system_prompt(self, history: List[Dict[str, str]]) -> str:
         instr = self._base_user_instruction()
         if self.persona_lines:
