@@ -26,49 +26,39 @@ import os
 import threading
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import hashlib  # <<< 新增：用于稳定哈希种子
 
 # ----- matplotlib（无显示环境安全）-----
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from datasets import load_dataset  # must be available
+from datasets import load_dataset
+from loguru import logger
+from tqdm import tqdm
 
-# ============== Logging & Progress ==============
-try:
-    from loguru import logger
-except Exception:
-    import logging as _logging
-    class _FallbackLogger:
-        def __getattr__(self, name: str):
-            fn = getattr(_logging.getLogger(__name__), name, None)
-            if fn is None:
-                def noop(*a, **k): pass
-                return noop
-            return fn
-    logger = _FallbackLogger()
-
-try:
-    from tqdm import tqdm
-except Exception:
-    def tqdm(iterable, total=None, desc=None):
-        if total is None:
-            total = len(iterable) if hasattr(iterable, "__len__") else None
-        for i, x in enumerate(iterable, 1):
-            if total:
-                logger.info(f"{desc or 'Progress'}: {i}/{total} ({i/total*100:.1f}%)")
-            yield x
 
 # ============== Project Modules ==============
-from prompt import generate_persona_system_prompt  # 助手侧人设提示
+from prompt import generate_persona_system_prompt, generate_persona_traits  # 助手侧人设提示
 from predictor import HeuristicMotivePredictor, llmClient
 from state_tracker import PersonaStateTracker, DIMENSIONS  # 仅助手用到 DIMENSIONS
+
+LLM = llmClient()
+PREDICTOR = HeuristicMotivePredictor(
+    LLM, beta=2.0, use_global_factor_weight=True, eps=0.15
+)
 
 # ============== 全局并发控制 ==============
 import os as _os
 _LLM_CONCURRENCY_DEFAULT = int(_os.getenv("LLM_CONCURRENCY", "4"))
 LLM_GATE = threading.Semaphore(max(1, _LLM_CONCURRENCY_DEFAULT))
 PLOT_LOCK = threading.Lock()
+
+# ============== 稳定随机种子工具（修复 tuple seed 报错） ==============
+def _stable_seed(*parts) -> int:
+    """将任意可打印的 parts 稳定映射为 32bit 正整数种子（跨平台可复现）"""
+    s = "|".join(map(str, parts))
+    return int(hashlib.sha256(s.encode("utf-8")).hexdigest(), 16) % (2**32)
 
 # ============== Persona IDs（内置） ==============
 DEFAULT_PERSONA_IDS = ["01", "02", "03", "04", "05", "06", "07", "08"]
@@ -97,7 +87,8 @@ def pick_persona_id_from_pool(pool: List[str], seed: int, index: int) -> str:
     if not pool:
         raise ValueError("persona pool is empty")
     rr = index % len(pool)
-    rng = random.Random((seed, index, len(pool)))
+    # 修复：tuple 作种子 -> 稳定哈希整数种子
+    rng = random.Random(_stable_seed("persona_pick", seed, index, len(pool)))
     if rng.random() < 0.15:
         return rng.choice(pool)
     return pool[rr]
@@ -359,40 +350,48 @@ class Agent:
     dynamic: bool
     persona_id: str
     # 助手侧仍使用 StateTracker；以中性 0.5 起点（可改为对齐人设向量）
-    P0: Dict[str, float] = field(default_factory=lambda: {k: 0.5 for k in DIMENSIONS})
+    P0: Optional[Dict[str, float]] = None
+    Pt: Optional[Dict[str, float]] = None 
     predictor: Optional[HeuristicMotivePredictor] = None
     logger: logging.Logger = field(default_factory=lambda: logging.getLogger(__name__))
 
     def __post_init__(self) -> None:
+        if not self.persona_id or not isinstance(self.persona_id, str):
+            raise ValueError("persona_id must be a non-empty string")
+        if self.P0 is None:
+            self.P0 = generate_persona_traits(self.persona_id)
         for k in DIMENSIONS:
             v = self.P0.get(k)
             if v is None or not (0.0 <= v <= 1.0):
                 raise ValueError(f"P0[{k}] must be in [0,1], got {v}")
         if self.dynamic:
             if self.predictor is None:
-                self.predictor = HeuristicMotivePredictor(
-                    llmClient(), beta=1.3, use_global_factor_weight=True, eps=0.15
-                )
+                self.predictor = PREDICTOR
             self.state_tracker = PersonaStateTracker(
                 P0=self.P0,
                 predictor=self.predictor,
-                target_step=0.12,
+
+                target_step=0.3,
                 lambda_decay=0.80,
-                alpha_cap=0.55,
-                gate_m_norm=0.20,
+                alpha_cap=1.0,
+
+                gate_m_norm=0.10,
                 gate_min_dims=1,
                 cooldown_k=1,
-                passive_reg_alpha=0.02,
+
+                passive_reg_alpha=0.002,
                 passive_reg_use_decay=True,
-                global_drift=0.005,
+                global_drift=0.001,
             )
         else:
             self.state_tracker = None
+        self.Pt = self.P0 if self.P0 else None
+
 
     def get_current_state(self) -> Dict[str, float]:
         if self.dynamic and self.state_tracker is not None:
             return self.state_tracker.get_current_state()
-        return dict(self.P0)
+        return dict(self.P0) # type: ignore
 
     def _anti_repeat_addendum(self, history: List[Dict[str, str]]) -> str:
         snippets = build_do_not_repeat_snippets(history, k=4, max_len=220)
@@ -408,6 +407,7 @@ class Agent:
     def system_prompt(self, history: List[Dict[str, str]]) -> str:
         base = generate_persona_system_prompt(
             persona_id=self.persona_id,
+            Pt=self.get_current_state(),
             include_base_task_line=True,
             include_big5_details=True,
         )
@@ -543,7 +543,8 @@ class PromptedUserAgent:
         返回 (文本, 事件元数据)
         """
         lead = self._make_shift_prefix()
-        rng = random.Random(("emotion", self._turn_index, topic))
+        # 修复：tuple 种子 -> 稳定哈希种子
+        rng = random.Random(_stable_seed("emotion", self._turn_index, topic))
         ev = pick_emotion_event(rng)
         emotion_txt = render_emotion_event(ev, rng)
         meta = {"emotion_event_id": ev["id"], "valence": ev["valence"]}
@@ -599,7 +600,7 @@ class PromptedUserAgent:
         base_sys = self._system_prompt(history)
         payload = [{"role": "system", "content": base_sys}] + history
         try:
-            llm = llmClient()
+            llm = LLM
             with LLM_GATE:
                 text = (llm.chat_once(messages=payload, temperature=temperature) or "").strip()
 
@@ -650,7 +651,7 @@ class PromptedUserAgent:
 def simulate_dialogue(
     user_agent: PromptedUserAgent,
     assistant_agent: Agent,
-    num_turns: int = 15,
+    num_turns: int = 10,
     temperature: float = 0.7,
 ) -> Tuple[List[Dict[str, str]], List[Dict[str, float]], Optional[int]]:
     conversation: List[Dict[str, str]] = []
@@ -770,7 +771,7 @@ def simulate_dataset(
     specs: List[DialogueSpec],
     use_dynamic_scenario: bool,
     use_dynamic_persona: bool,
-    turns_per_dialogue: int = 15,
+    turns_per_dialogue: int = 10,
     temperature: float = 0.7,
     combo_tag: str = "stable_static",
     index_accumulator: List[Dict[str, str]] | None = None,

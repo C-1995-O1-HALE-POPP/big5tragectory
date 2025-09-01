@@ -417,7 +417,7 @@ AGENTS = [
   }
 ]
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 BIG5_ORDER = ["O", "C", "E", "A", "N"]  # 与 persona_vector 一一对应
 
@@ -452,7 +452,7 @@ def _descriptor_for_traits(traits: Dict[str, float], big5_prompts: Dict[str, Dic
 
 def generate_persona_system_prompt(
     persona_id: str,
-    big5_prompts: Dict[str, Dict[float, str]] = None,
+    Pt: Dict[str, float] = {}, 
     include_base_task_line: bool = True,
     include_big5_details: bool = True,
 ) -> str:
@@ -463,8 +463,6 @@ def generate_persona_system_prompt(
     - include_base_task_line: 是否包含“as an assistant … one to two sentences …”任务行
     - include_big5_details: 末尾是否追加大五描述（数值 + 文案）
     """
-    if big5_prompts is None:
-        raise ValueError("big5_prompts (big5_system_prompts_en) must be provided.")
 
     # 取 persona
     idx = {p.get("id"): p for p in AGENTS}
@@ -475,9 +473,9 @@ def generate_persona_system_prompt(
     name = p.get("name", "").strip() or "Unnamed Persona"
     role_desc = p.get("role_description", "").strip()
     styles = p.get("style_tags", []) or []
-    vec = p.get("personality_vector", [])
-    trait_vals = _vector_to_trait_dict(vec)
-    trait_desc = _descriptor_for_traits(trait_vals, big5_prompts)
+
+    trait_vals = Pt
+    trait_desc = _descriptor_for_traits(trait_vals, big5_system_prompts_en)
 
     # 英文模板（按你的中文结构逐行翻译）
     lines = []
@@ -513,7 +511,7 @@ def generate_persona_system_prompt(
 
     return "\n".join(lines)
 
-def generate_persona_dimnension(persona_id: str) -> Dict[str, Any]:
+def generate_persona_traits(persona_id: str) -> Dict[str, float]:
     """
     从 persona 列表中选定 id，导出该角色的维度信息（含 personality_vector 和 5 个维度的值）。
     - persona_id: 目标 persona 的 "id"
@@ -525,22 +523,15 @@ def generate_persona_dimnension(persona_id: str) -> Dict[str, Any]:
     p = idx[persona_id]
 
     vec = p.get("personality_vector", [])
-    trait_vals = _vector_to_trait_dict(vec)
+    return _vector_to_trait_dict(vec)
 
-    return {
-        "id": persona_id,
-        "name": p.get("name", "").strip() or "Unnamed Persona",
-        "role_description": p.get("role_description", "").strip(),
-        "style_tags": p.get("style_tags", []) or [],
-        "personality_vector": vec,
-        "traits": trait_vals
-    }
 
 if __name__ == "__main__":
   prompt_txt = generate_persona_system_prompt(
       persona_id="03",
-      big5_prompts=big5_system_prompts_en,
+      Pt={"O":0.6,"C":0.85,"E":0.3,"A":0.25,"N":0.85},
       include_base_task_line=True,
       include_big5_details=True,
   )
   print(prompt_txt)
+  print(generate_persona_traits("03"))

@@ -403,7 +403,7 @@ if __name__ == "__main__":
 
     predictor = HeuristicMotivePredictor(
         llm=llm,
-        beta=1.3,
+        beta=2.0,
         use_global_factor_weight=True,
         eps=0.15,           # ↓ 缩小死区，direction 更容易非零（你日志里很多维度本就很高）
     )
@@ -413,19 +413,19 @@ if __name__ == "__main__":
         predictor=predictor,
 
         # 主动更新更敢
-        target_step=0.12,   # ↑ 单步目标位移（从 0.08 提到 0.12）
-        lambda_decay=0.80,  # ↑ 回归因子更慢衰，d_t 更大
-        alpha_cap=0.55,     # ↑ 放宽每轮最大权重
+        target_step=0.3,   # ↑ 单步目标位移（从 0.08 提到 0.12）
+        lambda_decay=0.30,  # ↑ 回归因子更慢衰，d_t 更大
+        alpha_cap=1.0,     # ↑ 放宽每轮最大权重
 
         # Gate 放宽（你日志里 C/A/N 经常 m=0.75/0.88 但被冷却挡住）
-        gate_m_norm=0.20,   # ↓ 触发阈值降低
+        gate_m_norm=0.10,   # ↓ 触发阈值降低
         gate_min_dims=1,    # ↓ 只需一个维度满足即可
         cooldown_k=1,       # ↓ 相邻轮也可再次更新
 
         # 被动回归和漂移降到“背景噪声”级
-        passive_reg_alpha=0.02,  # ↓ 避免把主动变化吃回去
+        passive_reg_alpha=0.002,  # ↓ 避免把主动变化吃回去
         passive_reg_use_decay=True,
-        global_drift=0.005,      # ↓ 极小化末尾回归
+        global_drift=0.001,      # ↓ 极小化末尾回归
     )
 
     traj = tracker.run_dialogue(dialogue)
