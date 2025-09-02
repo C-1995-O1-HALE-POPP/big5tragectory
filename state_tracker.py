@@ -72,6 +72,15 @@ class PersonaStateTracker:
         passive_reg_alpha: float = 0.06,     # Gate=false 时的基础回归步长（0~0.12 建议）
         passive_reg_use_decay: bool = True,  # 是否乘以 d_t 衰减（更平滑）
 
+        # ---- B) “皮筋回拉”：目标点朝 P0 混合 ----
+        eta_base: float = 0.15,     # 回拉的基础强度（原来固定 0.15）（默认回拉强度）
+        eta_scale: float = 0.50,    # 回拉与偏离距离的线性关系比例（原来固定 0.50）
+        eta_cap: float = 0.75,      # 回拉强度的上限，防止完全锁死
+
+        # ---- 护栏参数 ----
+        guard_dist: float = 0.35,   # 偏离多大才触发护栏
+        guard_alpha_cap: float = 0.25,  # 护栏下压步长的上限
+
         # ---- C) 每轮末尾的极小全局回归 ----
         global_drift: float = 0.02,          # 0~0.03：太大将掩盖正常更新
 
@@ -103,6 +112,13 @@ class PersonaStateTracker:
         self.passive_reg_alpha = float(passive_reg_alpha)
         self.passive_reg_use_decay = bool(passive_reg_use_decay)
 
+        # B) 皮筋回拉参数
+        self.eta_base = float(eta_base)
+        self.eta_scale = float(eta_scale)
+        self.eta_cap = float(eta_cap)
+        self.guard_dist = float(guard_dist)
+        self.guard_alpha_cap = float(guard_alpha_cap)
+
         # C) 全局极小回归
         self.global_drift = float(global_drift)
 
@@ -118,6 +134,8 @@ class PersonaStateTracker:
             f"[Init] P0={self.P0} | target_step={self.target_step} "
             f"| lambda_decay={self.lambda_decay} | alpha_cap={self.alpha_cap} "
             f"| gate(m_norm≥{self.gate_m_norm}, min_dims={self.gate_min_dims}, cooldown={self.cooldown_k}) "
+            f"| elastic(eta_base={self.eta_base}, eta_scale={self.eta_scale}, eta_cap={self.eta_cap}) "
+            f"| guard(dist>{self.guard_dist}→α_cap={self.guard_alpha_cap})"
             f"| passive_reg_alpha={self.passive_reg_alpha}×decay={self.passive_reg_use_decay} "
             f"| global_drift={self.global_drift}"
         )
@@ -249,13 +267,13 @@ class PersonaStateTracker:
 
             # ---- B) “皮筋回拉”：目标点朝 P0 混合，偏离越远回拉越强 ----
             dist = abs(pt_now - self.P0[dim])
-            eta = 0.15 + 0.50 * dist          # 约 0.15~0.65
-            eta = clamp(eta, 0.0, 0.75)
+            eta = self.eta_base + self.eta_scale * dist         
+            eta = clamp(eta, 0.0, self.eta_cap)
             pt_target = (1 - eta) * pt_target + eta * self.P0[dim]
 
             # 护栏（可选）：偏离过大时压制步长并强制朝 P0
-            if dist > 0.35:
-                a = min(a, 0.25)
+            if dist > self.guard_dist:
+                a = min(a, self.guard_alpha_cap)
                 pt_target = self.P0[dim]
 
             # P_{t+1} = (1-α) P_t + α P_target
@@ -426,6 +444,15 @@ if __name__ == "__main__":
         passive_reg_alpha=0.002,  # ↓ 避免把主动变化吃回去
         passive_reg_use_decay=True,
         global_drift=0.001,      # ↓ 极小化末尾回归
+
+        # 皮筋回拉参数（新加）
+        eta_base=0.01,     # 基础回拉强度
+        eta_scale=0.10,    # 回拉与偏离距离的线性关系比例
+        eta_cap=0.30,      # 回拉强度的上限
+
+        # 护栏参数（新加）
+        guard_dist=0.8,   # 偏离多大才触发护栏
+        guard_alpha_cap=0.05,  # 护栏下压步长
     )
 
     traj = tracker.run_dialogue(dialogue)

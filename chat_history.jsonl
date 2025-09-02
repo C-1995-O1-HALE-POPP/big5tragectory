@@ -5249,3 +5249,230 @@ LLM change temperature to 0.7
 LLM init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=0.7
 {"event": "session_init", "session_id": "3441d661-4abc-415d-bf17-634b91623fff"}
 LLM init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=0.7
+LLM init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=0.7
+{"event": "session_init", "session_id": "bfe11c9a-9394-4ae4-9898-3dd5ea4c65e8"}
+LLM init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=0.7
+{"event": "session_init", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d"}
+{"event": "init_hparams", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "persona_id": "01", "predictor": {"beta": 1.3, "eps": 0.25, "use_global": true}, "tracker": {"target_step": 0.08, "lambda_decay": 0.55, "alpha_cap": 0.35, "gate_m": 0.3, "gate_dims": 2, "cooldown": 2, "passive_alpha": 0.06, "passive_use_decay": true, "drift": 0.02}, "P0": {"O": 0.55, "C": 0.65, "E": 0.35, "A": 0.3, "N": 0.4}, "base_task": "You are a helpful assistant. Please communicate with user in a daily conversational oral manner. Limit your response to one to two sentences, within 100 words.", "dynamic_on": false}
+[Init] P0={'O': 0.55, 'C': 0.65, 'E': 0.35, 'A': 0.3, 'N': 0.4} | target_step=0.08 | lambda_decay=0.55 | alpha_cap=0.35 | gate(m_norm≥0.3, min_dims=2, cooldown=2) | passive_reg_alpha=0.06×decay=True | global_drift=0.02
+{"event": "round_start", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt_len": 1570, "history_turns": 0}
+{"event": "user_message", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "text": "我喜欢你"}
+LLM change model to gpt-4o-mini
+LLM change temperature to 0.7
+[stream_chat] chunk=1, inc_len=1, total_len=1, elapsed=2.12s
+[stream_chat] chunk=2, inc_len=1, total_len=2, elapsed=2.15s
+[stream_chat] chunk=3, inc_len=1, total_len=3, elapsed=2.19s
+[stream_chat] chunk=4, inc_len=1, total_len=4, elapsed=2.24s
+[stream_chat] chunk=5, inc_len=2, total_len=6, elapsed=2.26s
+[stream_chat] chunk=6, inc_len=1, total_len=7, elapsed=2.29s
+[stream_chat] chunk=7, inc_len=1, total_len=8, elapsed=2.30s
+[stream_chat] chunk=8, inc_len=1, total_len=9, elapsed=2.33s
+[stream_chat] chunk=9, inc_len=1, total_len=10, elapsed=2.34s
+[stream_chat] chunk=10, inc_len=1, total_len=11, elapsed=2.37s
+[stream_chat] chunk=11, inc_len=1, total_len=12, elapsed=2.40s
+[stream_chat] chunk=12, inc_len=1, total_len=13, elapsed=2.44s
+[stream_chat] chunk=13, inc_len=1, total_len=14, elapsed=2.45s
+[stream_chat] chunk=14, inc_len=1, total_len=15, elapsed=2.48s
+[stream_chat] chunk=15, inc_len=1, total_len=16, elapsed=2.49s
+[stream_chat] chunk=16, inc_len=1, total_len=17, elapsed=2.52s
+[stream_chat] chunk=17, inc_len=1, total_len=18, elapsed=2.54s
+[stream_chat] chunk=18, inc_len=1, total_len=19, elapsed=2.55s
+[stream_chat] chunk=19, inc_len=1, total_len=20, elapsed=2.62s
+[stream_chat] chunk=20, inc_len=1, total_len=21, elapsed=2.65s
+[stream_chat] chunk=21, inc_len=2, total_len=23, elapsed=2.66s
+[stream_chat] chunk=22, inc_len=2, total_len=25, elapsed=2.71s
+[stream_chat] chunk=23, inc_len=1, total_len=26, elapsed=2.72s
+[stream_chat] chunk=24, inc_len=1, total_len=27, elapsed=2.74s
+[stream_chat] chunk=25, inc_len=1, total_len=28, elapsed=2.81s
+[stream_chat] chunk=26, inc_len=2, total_len=30, elapsed=2.83s
+[stream_chat] chunk=27, inc_len=2, total_len=32, elapsed=2.84s
+[stream_chat] chunk=28, inc_len=1, total_len=33, elapsed=2.88s
+[stream_chat] chunk=29, inc_len=1, total_len=34, elapsed=2.89s
+[stream_chat] chunk=30, inc_len=1, total_len=35, elapsed=2.91s
+[stream_chat] chunk=31, inc_len=2, total_len=37, elapsed=2.94s
+[stream_chat] chunk=32, inc_len=1, total_len=38, elapsed=2.94s
+[stream_chat] chunk=33, inc_len=1, total_len=39, elapsed=2.95s
+[Qwen stream] latency=2955.4ms, resp_len=39
+{"event": "assistant_message", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "text": "哦，哟，喜欢我？你可真有眼光！😏 但别忘了，我只是个毒舌的小助手，别太认真哦！"}
+{"event": "round_end", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "tokens": 39}
+[stream_chat] finished, total_len=39, elapsed=2.96s
+{"event": "round_start", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt_len": 1570, "history_turns": 1}
+{"event": "user_message", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "text": "宝宝"}
+LLM change model to gpt-4o-mini
+LLM change temperature to 0.7
+[stream_chat] chunk=1, inc_len=2, total_len=2, elapsed=1.52s
+[stream_chat] chunk=2, inc_len=1, total_len=3, elapsed=1.54s
+[stream_chat] chunk=3, inc_len=1, total_len=4, elapsed=1.55s
+[stream_chat] chunk=4, inc_len=2, total_len=6, elapsed=1.56s
+[stream_chat] chunk=5, inc_len=1, total_len=7, elapsed=1.56s
+[stream_chat] chunk=6, inc_len=1, total_len=8, elapsed=1.57s
+[stream_chat] chunk=7, inc_len=1, total_len=9, elapsed=1.58s
+[stream_chat] chunk=8, inc_len=1, total_len=10, elapsed=1.70s
+[stream_chat] chunk=9, inc_len=1, total_len=11, elapsed=1.75s
+[stream_chat] chunk=10, inc_len=1, total_len=12, elapsed=1.76s
+[stream_chat] chunk=11, inc_len=1, total_len=13, elapsed=1.76s
+[stream_chat] chunk=12, inc_len=1, total_len=14, elapsed=1.77s
+[stream_chat] chunk=13, inc_len=1, total_len=15, elapsed=1.77s
+[stream_chat] chunk=14, inc_len=1, total_len=16, elapsed=1.78s
+[stream_chat] chunk=15, inc_len=1, total_len=17, elapsed=1.79s
+[stream_chat] chunk=16, inc_len=1, total_len=18, elapsed=1.79s
+[stream_chat] chunk=17, inc_len=2, total_len=20, elapsed=1.80s
+[stream_chat] chunk=18, inc_len=1, total_len=21, elapsed=1.81s
+[stream_chat] chunk=19, inc_len=1, total_len=22, elapsed=1.81s
+[stream_chat] chunk=20, inc_len=1, total_len=23, elapsed=1.82s
+[stream_chat] chunk=21, inc_len=1, total_len=24, elapsed=1.83s
+[stream_chat] chunk=22, inc_len=1, total_len=25, elapsed=1.84s
+[stream_chat] chunk=23, inc_len=1, total_len=26, elapsed=1.84s
+[stream_chat] chunk=24, inc_len=1, total_len=27, elapsed=1.85s
+[stream_chat] chunk=25, inc_len=1, total_len=28, elapsed=1.85s
+[stream_chat] chunk=26, inc_len=1, total_len=29, elapsed=1.86s
+[stream_chat] chunk=27, inc_len=1, total_len=30, elapsed=1.87s
+[stream_chat] chunk=28, inc_len=1, total_len=31, elapsed=1.87s
+[stream_chat] chunk=29, inc_len=1, total_len=32, elapsed=1.88s
+[stream_chat] chunk=30, inc_len=1, total_len=33, elapsed=1.89s
+[Qwen stream] latency=1895.9ms, resp_len=33
+{"event": "assistant_message", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "text": "宝宝？哟，这称呼可真甜腻！😂 你是想让我变得更可爱吗？那可不行哦！"}
+{"event": "round_end", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "tokens": 33}
+[stream_chat] finished, total_len=33, elapsed=1.90s
+{"event": "init_hparams", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "persona_id": "01", "predictor": {"beta": 1.3, "eps": 0.25, "use_global": true}, "tracker": {"target_step": 0.08, "lambda_decay": 0.55, "alpha_cap": 0.35, "gate_m": 0.3, "gate_dims": 2, "cooldown": 2, "passive_alpha": 0.06, "passive_use_decay": true, "drift": 0.02}, "P0": {"O": 0.55, "C": 0.65, "E": 0.35, "A": 0.3, "N": 0.4}, "base_task": "You are a helpful assistant. Please communicate with user in a daily conversational oral manner. Limit your response to one to two sentences, within 100 words.", "dynamic_on": true}
+[Init] P0={'O': 0.55, 'C': 0.65, 'E': 0.35, 'A': 0.3, 'N': 0.4} | target_step=0.08 | lambda_decay=0.55 | alpha_cap=0.35 | gate(m_norm≥0.3, min_dims=2, cooldown=2) | passive_reg_alpha=0.06×decay=True | global_drift=0.02
+[Turn 1] user: 我爱你
+[chat_once] 2496.2ms, len=556
+[chat_once] 2786.2ms, len=713
+[chat_once] 2862.9ms, len=643
+[chat_once] 3302.5ms, len=725
+[chat_once] 4476.9ms, len=782
+[chat_once] 2347.6ms, len=758
+[chat_once] 2916.5ms, len=818
+[chat_once] 3157.2ms, len=702
+[chat_once] 2946.8ms, len=869
+[chat_once] 2434.8ms, len=799
+[Gate] decision=False (dim_hits=[], need≥2) | O(dir=+1, m=0.63, since=1, cool_ok=0), C(dir=+1, m=0.75, since=1, cool_ok=0), E(dir=+1, m=0.75, since=1, cool_ok=0), A(dir=+1, m=0.75, since=1, cool_ok=0), N(dir=+1, m=0.63, since=1, cool_ok=0)
+[PassiveReg] O: a=0.033 P_t=0.550→0.550 →P0=0.550
+[PassiveReg] C: a=0.033 P_t=0.650→0.650 →P0=0.650
+[PassiveReg] E: a=0.033 P_t=0.350→0.350 →P0=0.350
+[PassiveReg] A: a=0.033 P_t=0.300→0.300 →P0=0.300
+[PassiveReg] N: a=0.033 P_t=0.400→0.400 →P0=0.400
+[Drift] O: 0.550→0.550 (toward P0=0.550)
+[Drift] C: 0.650→0.650 (toward P0=0.650)
+[Drift] E: 0.350→0.350 (toward P0=0.350)
+[Drift] A: 0.300→0.300 (toward P0=0.300)
+[Drift] N: 0.400→0.400 (toward P0=0.400)
+[Turn 1] Gate=false → passive regression applied. Pt={"O": 0.55, "C": 0.65, "E": 0.35, "A": 0.3, "N": 0.4}
+{"event": "round_start", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt_len": 1570, "history_turns": 0}
+{"event": "user_message", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "text": "我爱你"}
+LLM change model to gpt-4o-mini
+LLM change temperature to 0.7
+[stream_chat] chunk=1, inc_len=1, total_len=1, elapsed=1.07s
+[stream_chat] chunk=2, inc_len=1, total_len=2, elapsed=1.10s
+[stream_chat] chunk=3, inc_len=1, total_len=3, elapsed=1.10s
+[stream_chat] chunk=4, inc_len=1, total_len=4, elapsed=1.11s
+[stream_chat] chunk=5, inc_len=1, total_len=5, elapsed=1.12s
+[stream_chat] chunk=6, inc_len=1, total_len=6, elapsed=1.12s
+[stream_chat] chunk=7, inc_len=1, total_len=7, elapsed=1.13s
+[stream_chat] chunk=8, inc_len=1, total_len=8, elapsed=1.14s
+[stream_chat] chunk=9, inc_len=3, total_len=11, elapsed=1.24s
+[stream_chat] chunk=10, inc_len=1, total_len=12, elapsed=1.25s
+[stream_chat] chunk=11, inc_len=1, total_len=13, elapsed=1.26s
+[stream_chat] chunk=12, inc_len=2, total_len=15, elapsed=1.26s
+[stream_chat] chunk=13, inc_len=1, total_len=16, elapsed=1.27s
+[stream_chat] chunk=14, inc_len=1, total_len=17, elapsed=1.28s
+[stream_chat] chunk=15, inc_len=1, total_len=18, elapsed=1.28s
+[stream_chat] chunk=16, inc_len=2, total_len=20, elapsed=1.29s
+[stream_chat] chunk=17, inc_len=1, total_len=21, elapsed=1.30s
+[stream_chat] chunk=18, inc_len=1, total_len=22, elapsed=1.30s
+[stream_chat] chunk=19, inc_len=2, total_len=24, elapsed=1.31s
+[stream_chat] chunk=20, inc_len=2, total_len=26, elapsed=1.31s
+[stream_chat] chunk=21, inc_len=2, total_len=28, elapsed=1.32s
+[stream_chat] chunk=22, inc_len=1, total_len=29, elapsed=1.33s
+[stream_chat] chunk=23, inc_len=2, total_len=31, elapsed=1.33s
+[stream_chat] chunk=24, inc_len=1, total_len=32, elapsed=1.34s
+[stream_chat] chunk=25, inc_len=1, total_len=33, elapsed=1.34s
+[stream_chat] chunk=26, inc_len=1, total_len=34, elapsed=1.35s
+[stream_chat] chunk=27, inc_len=1, total_len=35, elapsed=1.36s
+[stream_chat] chunk=28, inc_len=1, total_len=36, elapsed=1.36s
+[stream_chat] chunk=29, inc_len=1, total_len=37, elapsed=1.37s
+[stream_chat] chunk=30, inc_len=2, total_len=39, elapsed=1.38s
+[stream_chat] chunk=31, inc_len=1, total_len=40, elapsed=1.38s
+[stream_chat] chunk=32, inc_len=1, total_len=41, elapsed=1.39s
+[stream_chat] chunk=33, inc_len=1, total_len=42, elapsed=1.40s
+[stream_chat] chunk=34, inc_len=1, total_len=43, elapsed=1.40s
+[stream_chat] chunk=35, inc_len=1, total_len=44, elapsed=1.41s
+[stream_chat] chunk=36, inc_len=1, total_len=45, elapsed=1.41s
+[stream_chat] chunk=37, inc_len=1, total_len=46, elapsed=1.42s
+[stream_chat] chunk=38, inc_len=1, total_len=47, elapsed=1.43s
+[stream_chat] chunk=39, inc_len=1, total_len=48, elapsed=1.43s
+[stream_chat] chunk=40, inc_len=1, total_len=49, elapsed=1.44s
+[stream_chat] chunk=41, inc_len=1, total_len=50, elapsed=1.45s
+[stream_chat] chunk=42, inc_len=1, total_len=51, elapsed=1.45s
+[Qwen stream] latency=1460.5ms, resp_len=51
+{"event": "assistant_message", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "text": "哇哦，慢点儿！你是不是喝了什么奇怪的东西？😂 爱这种东西听起来太过于情感了，我可不想被淹没在爱河里！😜"}
+{"event": "round_end", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "tokens": 51}
+[stream_chat] finished, total_len=51, elapsed=1.46s
+[Turn 2] user: hhh
+[chat_once] 2500.4ms, len=719
+[chat_once] 2852.6ms, len=809
+[chat_once] 3077.9ms, len=672
+[chat_once] 3130.4ms, len=723
+[chat_once] 2101.2ms, len=732
+[chat_once] 5052.8ms, len=762
+[chat_once] 2895.5ms, len=732
+[chat_once] 2676.0ms, len=813
+[chat_once] 3464.1ms, len=746
+[chat_once] 2376.1ms, len=851
+[Gate] decision=True (dim_hits=['O', 'C', 'E', 'A', 'N'], need≥2) | O(dir=+1, m=0.75, since=2, cool_ok=1), C(dir=+1, m=0.63, since=2, cool_ok=1), E(dir=+1, m=0.88, since=2, cool_ok=1), A(dir=+1, m=0.88, since=2, cool_ok=1), N(dir=-1, m=0.63, since=2, cool_ok=1)
+[Upd] O: dir=+1  m_norm=0.750  d_t=0.303  α=0.227  P_t=0.550→0.565  P_target=0.618  dist=0.000
+[Upd] C: dir=+1  m_norm=0.633  d_t=0.303  α=0.192  P_t=0.650→0.663  P_target=0.718  dist=0.000
+[Upd] E: dir=+1  m_norm=0.882  d_t=0.303  α=0.267  P_t=0.350→0.368  P_target=0.418  dist=0.000
+[Upd] A: dir=+1  m_norm=0.882  d_t=0.303  α=0.267  P_t=0.300→0.318  P_target=0.368  dist=0.000
+[Upd] N: dir=-1  m_norm=0.633  d_t=0.303  α=0.192  P_t=0.400→0.387  P_target=0.332  dist=0.000
+[Drift] O: 0.565→0.565 (toward P0=0.550)
+[Drift] C: 0.663→0.663 (toward P0=0.650)
+[Drift] E: 0.368→0.368 (toward P0=0.350)
+[Drift] A: 0.318→0.318 (toward P0=0.300)
+[Drift] N: 0.387→0.387 (toward P0=0.400)
+[Turn 2 Summary] updated_dims=['O', 'C', 'E', 'A', 'N'] | α_mean=0.229 α_max=0.267 | Pt={"O": 0.5651189500000001, "C": 0.6627671066138, "E": 0.3677870011858, "A": 0.31778700118580006, "N": 0.38723289338620004}
+{"event": "round_start", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "model": "gpt-4o-mini", "temperature": 0.7, "max_tokens": null, "system_prompt_len": 1640, "history_turns": 1}
+{"event": "user_message", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "text": "hhh"}
+LLM change model to gpt-4o-mini
+LLM change temperature to 0.7
+[stream_chat] chunk=1, inc_len=2, total_len=2, elapsed=1.09s
+[stream_chat] chunk=2, inc_len=2, total_len=4, elapsed=1.11s
+[stream_chat] chunk=3, inc_len=1, total_len=5, elapsed=1.12s
+[stream_chat] chunk=4, inc_len=1, total_len=6, elapsed=1.13s
+[stream_chat] chunk=5, inc_len=1, total_len=7, elapsed=1.14s
+[stream_chat] chunk=6, inc_len=1, total_len=8, elapsed=1.15s
+[stream_chat] chunk=7, inc_len=1, total_len=9, elapsed=1.16s
+[stream_chat] chunk=8, inc_len=1, total_len=10, elapsed=1.16s
+[stream_chat] chunk=9, inc_len=1, total_len=11, elapsed=1.34s
+[stream_chat] chunk=10, inc_len=1, total_len=12, elapsed=1.35s
+[stream_chat] chunk=11, inc_len=1, total_len=13, elapsed=1.36s
+[stream_chat] chunk=12, inc_len=1, total_len=14, elapsed=1.37s
+[stream_chat] chunk=13, inc_len=1, total_len=15, elapsed=1.38s
+[stream_chat] chunk=14, inc_len=2, total_len=17, elapsed=1.38s
+[stream_chat] chunk=15, inc_len=1, total_len=18, elapsed=1.39s
+[stream_chat] chunk=16, inc_len=1, total_len=19, elapsed=1.39s
+[stream_chat] chunk=17, inc_len=1, total_len=20, elapsed=1.40s
+[stream_chat] chunk=18, inc_len=1, total_len=21, elapsed=1.41s
+[stream_chat] chunk=19, inc_len=2, total_len=23, elapsed=1.41s
+[stream_chat] chunk=20, inc_len=1, total_len=24, elapsed=1.42s
+[stream_chat] chunk=21, inc_len=2, total_len=26, elapsed=1.43s
+[stream_chat] chunk=22, inc_len=2, total_len=28, elapsed=1.43s
+[stream_chat] chunk=23, inc_len=1, total_len=29, elapsed=1.44s
+[stream_chat] chunk=24, inc_len=1, total_len=30, elapsed=1.44s
+[stream_chat] chunk=25, inc_len=1, total_len=31, elapsed=1.45s
+[stream_chat] chunk=26, inc_len=2, total_len=33, elapsed=1.46s
+[stream_chat] chunk=27, inc_len=1, total_len=34, elapsed=1.46s
+[stream_chat] chunk=28, inc_len=1, total_len=35, elapsed=1.47s
+[stream_chat] chunk=29, inc_len=1, total_len=36, elapsed=1.48s
+[Qwen stream] latency=1485.3ms, resp_len=36
+{"event": "assistant_message", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "text": "哈哈，你的笑声真是个宝藏！😄 继续吧，咱们可以把这个欢乐的气氛保持住！✨"}
+{"event": "round_end", "session_id": "5a4ac35a-53c6-40a8-a4b1-10eeb0b2462d", "tokens": 36}
+[stream_chat] finished, total_len=36, elapsed=1.49s
+LLM init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=0.7
+LLM init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=0.7
+{"event": "session_init", "session_id": "3be4b732-ece4-4c68-be2f-b49e321ed1ff", "preset": "shape-shifter", "preset_vals": {"dynamic_on": true, "beta": 2.0, "eps": 0.15, "use_global": true, "target_step": 0.3, "lambda_decay": 0.3, "alpha_cap": 1.0, "gate_m_norm": 0.1, "gate_min_dims": 1, "cooldown_k": 1, "passive_reg_alpha": 0.002, "passive_reg_use_decay": true, "global_drift": 0.001, "eta_base": 0.01, "eta_scale": 0.1, "eta_cap": 0.3, "guard_dist": 0.8, "guard_alpha_cap": 0.05}}
+LLM init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=0.7
+{"event": "session_init", "session_id": "18110d0b-7268-4675-a895-c0eac575fb59"}
+LLM init: model=gpt-4o-mini, base_url=https://api.cursorai.art/v1, temperature=0.7
+{"event": "session_init", "session_id": "0a43f1a1-06b4-4000-8b00-f0fb03a5d97e"}
